@@ -98,6 +98,10 @@ export default function Relatorios() {
       start.setDate(start.getDate() - 30);
       filtro.dataInicio = start.toISOString().split("T")[0];
       filtro.dataFim = now.toISOString().split("T")[0];
+    } else if (periodo === "todos") {
+      const start = new Date(now.getFullYear(), now.getMonth(), 1);
+      filtro.dataInicio = start.toISOString().split("T")[0];
+      filtro.dataFim = now.toISOString().split("T")[0];
     }
 
     // If barber is selected from dropdown, use it
