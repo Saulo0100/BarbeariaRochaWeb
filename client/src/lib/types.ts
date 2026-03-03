@@ -85,6 +85,8 @@ export interface AgendamentoDetalheResponse {
   status: string;
   data: string;
   servico: string;
+  descricaoEtapa?: string | null;
+  agendamentoPrincipalId?: number | null;
 }
 
 export interface HorariosOcupadosResponse {

@@ -171,7 +171,12 @@ export default function CorteAtual() {
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Serviço</p>
-                  <p className="font-semibold text-sm">{corte.servico}</p>
+                  <p className="font-semibold text-sm">
+                    {corte.servico}
+                    {corte.descricaoEtapa && (
+                      <span className="text-xs text-primary ml-2">({corte.descricaoEtapa})</span>
+                    )}
+                  </p>
                 </div>
               </div>
 

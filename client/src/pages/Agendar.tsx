@@ -482,7 +482,7 @@ export default function Agendar() {
                   </p>
                   {isDuasEtapas && selectedServico && (
                     <p className="text-xs text-muted-foreground mt-1">
-                      1\u00BA horário: {selectedServico.descricaoEtapa1 || "Etapa 1"} | 2\u00BA horário: {selectedServico.descricaoEtapa2 || "Etapa 2"}
+                      1º horário: {selectedServico.descricaoEtapa1 || "Etapa 1"} | 2º horário: {selectedServico.descricaoEtapa2 || "Etapa 2"}
                     </p>
                   )}
                 </div>
@@ -499,7 +499,7 @@ export default function Agendar() {
                   <p className="text-sm font-medium mb-2 flex items-center gap-2">
                     <Clock className="w-4 h-4 text-primary" />
                     {isDuasEtapas
-                      ? `1\u00BA Horário - ${selectedServico?.descricaoEtapa1 || "Etapa 1"}`
+                      ? `1º Horário - ${selectedServico?.descricaoEtapa1 || "Etapa 1"}`
                       : "Horários disponíveis"}
                   </p>
                   {horariosDisponiveis.length > 0 ? (
@@ -541,9 +541,9 @@ export default function Agendar() {
                     <div className="mt-4">
                       <p className="text-sm font-medium mb-2 flex items-center gap-2">
                         <Clock className="w-4 h-4 text-primary" />
-                        2\u00BA Horário - {selectedServico?.descricaoEtapa2 || "Etapa 2"}
+                        2º Horário - {selectedServico?.descricaoEtapa2 || "Etapa 2"}
                         <span className="text-xs text-muted-foreground">
-                          (mín. {selectedServico?.intervaloMinimoHoras}h após o 1\u00BA)
+                          (mín. {selectedServico?.intervaloMinimoHoras}h após o 1º)
                         </span>
                       </p>
                       {loadingEtapa2 ? (
@@ -572,7 +572,7 @@ export default function Agendar() {
                         </div>
                       ) : (
                         <p className="text-center text-sm text-muted-foreground py-4">
-                          Nenhum horário disponível para a 2\u00AA etapa neste dia
+                          Nenhum horário disponível para a 2ª etapa neste dia
                         </p>
                       )}
                     </div>
@@ -685,7 +685,7 @@ export default function Agendar() {
                     </p>
                     {isDuasEtapas && selectedTimeEtapa2 && selectedServico && (
                       <p className="font-semibold text-sm text-primary mt-0.5">
-                        2\u00BA horário: {selectedTimeEtapa2}
+                        2º horário: {selectedTimeEtapa2}
                         <span className="text-xs text-muted-foreground ml-1">
                           ({selectedServico.descricaoEtapa2 || "Etapa 2"})
                         </span>
