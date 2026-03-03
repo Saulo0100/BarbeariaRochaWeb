@@ -50,13 +50,21 @@ const PERIODO_OPTIONS = [
   { label: "Hoje", value: "hoje" },
   { label: "7 dias", value: "semana" },
   { label: "30 dias", value: "mes" },
+  { label: "Mês", value: "mes-especifico" },
   { label: "Todos", value: "todos" },
+];
+
+const MESES = [
+  "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
 ];
 
 export default function Relatorios() {
   const { user, isPerfil } = useAuth();
   const [loading, setLoading] = useState(true);
   const [periodo, setPeriodo] = useState("mes");
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedBarbeiroId, setSelectedBarbeiroId] = useState<number | undefined>(undefined);
   const [barbeiros, setBarbeiros] = useState<BarbeirosDetalhesResponse[]>([]);
 
@@ -79,7 +87,7 @@ export default function Relatorios() {
 
   useEffect(() => {
     fetchData();
-  }, [periodo, selectedBarbeiroId]);
+  }, [periodo, selectedBarbeiroId, selectedMonth, selectedYear]);
 
   const buildFiltro = (): RelatorioFiltroRequest => {
     const filtro: RelatorioFiltroRequest = {};
@@ -98,6 +106,11 @@ export default function Relatorios() {
       start.setDate(start.getDate() - 30);
       filtro.dataInicio = start.toISOString().split("T")[0];
       filtro.dataFim = now.toISOString().split("T")[0];
+    } else if (periodo === "mes-especifico") {
+      const start = new Date(selectedYear, selectedMonth, 1);
+      const end = new Date(selectedYear, selectedMonth + 1, 0); // último dia do mês
+      filtro.dataInicio = start.toISOString().split("T")[0];
+      filtro.dataFim = end.toISOString().split("T")[0];
     } else if (periodo === "todos") {
       // Sem filtro de data — retorna todos os registros
     }
@@ -175,6 +188,30 @@ export default function Relatorios() {
           </button>
         ))}
       </div>
+
+      {/* Month/Year Selector */}
+      {periodo === "mes-especifico" && (
+        <div className="flex gap-2">
+          <select
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(Number(e.target.value))}
+            className="flex-1 h-10 px-3 text-sm bg-card border border-border rounded-md text-foreground"
+          >
+            {MESES.map((m, i) => (
+              <option key={i} value={i}>{m}</option>
+            ))}
+          </select>
+          <select
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(Number(e.target.value))}
+            className="w-24 h-10 px-3 text-sm bg-card border border-border rounded-md text-foreground"
+          >
+            {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map((y) => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* Barber Filter (admin only) */}
       {isAdmin && barbeiros.length > 0 && (
