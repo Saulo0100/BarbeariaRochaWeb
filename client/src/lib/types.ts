@@ -299,6 +299,8 @@ export interface AgendamentoFiltroRequest {
   usuarioId?: number;
   dtAgendamento?: string;
   servicos?: number[];
+  status?: string;
+  todosBarbeiros?: boolean;
 }
 
 export interface UsuarioFiltroRequest {

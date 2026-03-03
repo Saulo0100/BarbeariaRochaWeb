@@ -4,7 +4,7 @@
  */
 import { useEffect, useState, useCallback } from "react";
 import { agendamentoApi, usuarioApi } from "@/lib/api";
-import type { AgendamentoDetalheResponse, BarbeirosDetalhesResponse } from "@/lib/types";
+import type { AgendamentoDetalheResponse, AgendamentoFiltroRequest, BarbeirosDetalhesResponse } from "@/lib/types";
 import { statusLabels, statusColors } from "@/lib/types";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -42,14 +42,20 @@ export default function Agendamentos() {
 
   // Filters
   const [filtroBarbeiro, setFiltroBarbeiro] = useState<string>("all");
+  const [filtroStatus, setFiltroStatus] = useState<string>("all");
   const [filtroData, setFiltroData] = useState<string>("");
 
   const itensPorPagina = 10;
 
   const fetchAgendamentos = useCallback(() => {
     setLoading(true);
-    const filtro: any = {};
-    if (filtroBarbeiro && filtroBarbeiro !== "all") filtro.barbeiroId = parseInt(filtroBarbeiro);
+    const filtro: AgendamentoFiltroRequest = {};
+    if (filtroBarbeiro && filtroBarbeiro !== "all") {
+      filtro.barbeiroId = parseInt(filtroBarbeiro);
+    } else if (filtroBarbeiro === "all" && isAdmin) {
+      filtro.todosBarbeiros = true;
+    }
+    if (filtroStatus && filtroStatus !== "all") filtro.status = filtroStatus;
     if (filtroData) filtro.dtAgendamento = filtroData;
 
     agendamentoApi
@@ -60,7 +66,7 @@ export default function Agendamentos() {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [pagina, filtroBarbeiro, filtroData]);
+  }, [pagina, filtroBarbeiro, filtroStatus, filtroData, isAdmin]);
 
   useEffect(() => {
     fetchAgendamentos();
@@ -147,12 +153,35 @@ export default function Agendamentos() {
               </Select>
             </div>
           )}
+          <div>
+            <p className="text-xs text-muted-foreground mb-1">Status</p>
+            <Select
+              value={filtroStatus}
+              onValueChange={(v) => {
+                setFiltroStatus(v);
+                setPagina(1);
+              }}
+            >
+              <SelectTrigger className="h-10 bg-input border-border text-sm">
+                <SelectValue placeholder="Todos os status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                {Object.entries(statusLabels).map(([key, label]) => (
+                  <SelectItem key={key} value={key}>
+                    {label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <Button
             variant="outline"
             size="sm"
             onClick={() => {
               setFiltroData("");
               setFiltroBarbeiro("all");
+              setFiltroStatus("all");
               setPagina(1);
             }}
             className="text-xs border-border"
