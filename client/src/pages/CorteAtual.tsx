@@ -71,7 +71,8 @@ export default function CorteAtual() {
       toast.success("Marcado como cliente faltou");
       fetchCorteAtual();
     } catch (err: any) {
-      toast.error(err.response?.data || "Erro ao marcar falta");
+      const msg = err.response?.data || err.message || "Erro ao marcar falta";
+      toast.error(typeof msg === "string" ? msg : "Erro ao marcar falta");
     } finally {
       setMarkingNoShow(false);
     }
