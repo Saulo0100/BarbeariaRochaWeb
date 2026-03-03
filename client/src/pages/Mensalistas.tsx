@@ -148,15 +148,21 @@ export default function Mensalistas() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs">Dia do mês</Label>
-                  <Input
-                    type="number"
-                    min="1"
-                    max="31"
-                    value={form.dia}
-                    onChange={(e) => setForm({ ...form, dia: e.target.value })}
-                    className="h-10 bg-input border-border text-sm"
-                  />
+                  <Label className="text-xs">Dia da semana</Label>
+                  <Select value={form.dia} onValueChange={(v) => setForm({ ...form, dia: v })}>
+                    <SelectTrigger className="h-10 bg-input border-border text-sm">
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">Segunda-feira</SelectItem>
+                      <SelectItem value="2">Terça-feira</SelectItem>
+                      <SelectItem value="3">Quarta-feira</SelectItem>
+                      <SelectItem value="4">Quinta-feira</SelectItem>
+                      <SelectItem value="5">Sexta-feira</SelectItem>
+                      <SelectItem value="6">Sábado</SelectItem>
+                      <SelectItem value="0">Domingo</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               <div className="space-y-1">
@@ -208,7 +214,7 @@ export default function Mensalistas() {
                     </div>
                     <div className="flex items-center gap-2">
                       <Calendar className="w-3 h-3 text-primary" />
-                      Dia {m.dia}
+                      {m.dia.charAt(0).toUpperCase() + m.dia.slice(1)}
                     </div>
                   </div>
                 </div>
