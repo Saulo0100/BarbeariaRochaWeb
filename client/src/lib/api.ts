@@ -174,6 +174,8 @@ export const agendamentoApi = {
         "Filtro.BarbeiroId": filtro?.barbeiroId || undefined,
         "Filtro.UsuarioId": filtro?.usuarioId || undefined,
         "Filtro.DtAgendamento": filtro?.dtAgendamento || undefined,
+        "Filtro.Status": filtro?.status || undefined,
+        "Filtro.TodosBarbeiros": filtro?.todosBarbeiros || undefined,
       },
     }),
 };
