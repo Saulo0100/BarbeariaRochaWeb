@@ -41,7 +41,7 @@ export default function Home() {
   useEffect(() => {
     if (isAuthenticated && isPerfil("barbeiro")) {
       setLocation("/corte-atual");
-    } else if (isAuthenticated && isPerfil("administrador")) {
+    } else if (isAuthenticated && (isPerfil("administrador") || isPerfil("barbeiroadministrador"))) {
       setLocation("/dashboard");
     }
   }, [isAuthenticated, isPerfil, setLocation]);
