@@ -210,10 +210,10 @@ export interface MensalistaCriarRequest {
 
 // ===== RELATORIO RESPONSE MODELS =====
 export interface RelatorioGeralResponse {
-  totalCortes: number;
-  cortesHoje: number;
-  cortesSemana: number;
-  cortesMes: number;
+  totalAtendimentos: number;
+  atendimentosHoje: number;
+  atendimentosSemana: number;
+  atendimentosMes: number;
   faturamentoTotal: number;
   faturamentoHoje: number;
   faturamentoSemana: number;
@@ -239,14 +239,14 @@ export interface ServicoMaisPedidoResponse {
 export interface ClienteFrequenteResponse {
   nomeCliente: string;
   numeroCliente: string;
-  totalCortes: number;
-  ultimoCorte?: string;
+  totalAtendimentos: number;
+  ultimoAtendimento?: string;
   totalGasto: number;
 }
 
 export interface FaturamentoPorPeriodoResponse {
   periodo: string;
-  totalCortes: number;
+  totalAtendimentos: number;
   faturamento: number;
 }
 
@@ -260,7 +260,7 @@ export interface FaturamentoPorMetodoResponse {
 export interface RelatorioBarbeiroResponse {
   barbeiroId: number;
   nomeBarbeiro: string;
-  totalCortes: number;
+  totalAtendimentos: number;
   faturamento: number;
   ticketMedio: number;
   cancelamentosTotal: number;
