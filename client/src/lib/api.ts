@@ -169,13 +169,13 @@ export const agendamentoApi = {
   listar: (pagina = 1, itensPorPagina = 10, filtro?: AgendamentoFiltroRequest) =>
     api.get<PaginacaoResultado<AgendamentoDetalheResponse>>("/api/agendamento", {
       params: {
-        Pagina: pagina,
-        ItensPorPagina: itensPorPagina,
-        "Filtro.BarbeiroId": filtro?.barbeiroId || undefined,
-        "Filtro.UsuarioId": filtro?.usuarioId || undefined,
-        "Filtro.DtAgendamento": filtro?.dtAgendamento || undefined,
-        "Filtro.Status": filtro?.status || undefined,
-        "Filtro.TodosBarbeiros": filtro?.todosBarbeiros || undefined,
+        pagina,
+        itensPorPagina,
+        barbeiroId: filtro?.barbeiroId || undefined,
+        usuarioId: filtro?.usuarioId || undefined,
+        dtAgendamento: filtro?.dtAgendamento || undefined,
+        status: filtro?.status || undefined,
+        todosBarbeiros: filtro?.todosBarbeiros || undefined,
       },
     }),
 };
