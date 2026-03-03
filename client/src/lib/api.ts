@@ -13,6 +13,7 @@ import type {
   FaturamentoPorMetodoResponse,
   FaturamentoPorPeriodoResponse,
   HorariosDisponiveisResponse,
+  HorariosDisponiveisServicoResponse,
   HorariosOcupadosResponse,
   LoginRequest,
   EsqueceuSenhaRequest,
@@ -296,6 +297,16 @@ export const horarioApi = {
   disponiveis: (barbeiroId: number, data: string) =>
     api.get<HorariosDisponiveisResponse>("/api/horario/disponiveis", {
       params: { barbeiroId, data },
+    }),
+
+  disponiveisPorServico: (barbeiroId: number, data: string, servicoId: number) =>
+    api.get<HorariosDisponiveisServicoResponse>("/api/horario/disponiveis-servico", {
+      params: { barbeiroId, data, servicoId },
+    }),
+
+  disponiveisEtapa2: (barbeiroId: number, data: string, servicoId: number, horaEtapa1: string) =>
+    api.get<HorariosDisponiveisServicoResponse>("/api/horario/disponiveis-etapa2", {
+      params: { barbeiroId, data, servicoId, horaEtapa1 },
     }),
 
   todos: (data: string) =>
