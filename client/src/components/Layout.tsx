@@ -50,6 +50,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       ];
     }
 
+    if (isPerfil("barbeiroadministrador")) {
+      return [
+        { path: "/corte-atual", icon: Scissors, label: "Atual" },
+        { path: "/agendamentos", icon: CalendarCheck, label: "Agenda" },
+        { path: "/dashboard", icon: Home, label: "Painel" },
+        { path: "/perfil", icon: User, label: "Perfil" },
+      ];
+    }
+
     if (isPerfil("barbeiro")) {
       return [
         { path: "/corte-atual", icon: Scissors, label: "Atual" },
@@ -110,7 +119,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 </div>
                 <div className="h-px bg-border my-2" />
 
-                {isPerfil("administrador") && (
+                {(isPerfil("administrador") || isPerfil("barbeiroadministrador")) && (
                   <>
                     <Link
                       href="/servicos-admin"
@@ -135,6 +144,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     >
                       <Users className="w-4 h-4" />
                       Mensalistas
+                    </Link>
+                    <Link
+                      href="/usuarios"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
+                    >
+                      <Users className="w-4 h-4" />
+                      Usuários
                     </Link>
                   </>
                 )}

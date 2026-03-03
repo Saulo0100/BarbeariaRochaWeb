@@ -31,7 +31,7 @@ import { motion } from "framer-motion";
 
 export default function Agendamentos() {
   const { isPerfil } = useAuth();
-  const isAdmin = isPerfil("administrador");
+  const isAdmin = isPerfil("administrador") || isPerfil("barbeiroadministrador");
 
   const [agendamentos, setAgendamentos] = useState<AgendamentoDetalheResponse[]>([]);
   const [barbeiros, setBarbeiros] = useState<BarbeirosDetalhesResponse[]>([]);

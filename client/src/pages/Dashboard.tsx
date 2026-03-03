@@ -22,7 +22,7 @@ import { motion } from "framer-motion";
 const HERO_IMG = "https://d2xsxph8kpxj0f.cloudfront.net/310519663043062505/CjBWWVpcRtjqZnbfjVbFp8/hero-barber-jFG7MXqmkn5oqxDjr2BCDy.webp";
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, isPerfil } = useAuth();
   const [stats, setStats] = useState({
     agendamentosHoje: 0,
     totalUsuarios: 0,
@@ -56,7 +56,10 @@ export default function Dashboard() {
     });
   }, []);
 
+  const isBarbeiroAdmin = isPerfil("barbeiroadministrador");
+
   const quickLinks = [
+    ...(isBarbeiroAdmin ? [{ href: "/corte-atual", icon: Scissors, label: "Corte Atual", color: "text-yellow-400" }] : []),
     { href: "/agendamentos", icon: CalendarCheck, label: "Agendamentos", color: "text-emerald-400" },
     { href: "/usuarios", icon: Users, label: "Usuários", color: "text-blue-400" },
     { href: "/servicos-admin", icon: ClipboardList, label: "Serviços", color: "text-amber-400" },

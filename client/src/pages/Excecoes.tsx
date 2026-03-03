@@ -37,7 +37,7 @@ import { motion } from "framer-motion";
 
 export default function Excecoes() {
   const { isPerfil } = useAuth();
-  const isAdmin = isPerfil("administrador");
+  const isAdmin = isPerfil("administrador") || isPerfil("barbeiroadministrador");
 
   const [excecoes, setExcecoes] = useState<ExcecaoDetalhesResponse[]>([]);
   const [barbeiros, setBarbeiros] = useState<BarbeirosDetalhesResponse[]>([]);

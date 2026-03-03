@@ -45,7 +45,7 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Interceptor para tratar erros
+// Interceptor para tratar erros (inclui tratativa do ExceptionMiddleware da API)
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -54,6 +54,12 @@ api.interceptors.response.use(
       localStorage.removeItem("user");
       window.location.href = "/login";
     }
+
+    // Tratativa de erros do ExceptionMiddleware: { status, message }
+    if (error.response?.data && typeof error.response.data === "object" && error.response.data.message) {
+      error.response.data = error.response.data.message;
+    }
+
     return Promise.reject(error);
   }
 );
