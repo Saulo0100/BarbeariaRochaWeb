@@ -16,6 +16,7 @@ import {
   LogOut,
   ClipboardList,
   CalendarCheck,
+  BarChart3,
   Menu,
   X,
 } from "lucide-react";
@@ -45,7 +46,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       return [
         { path: "/dashboard", icon: Home, label: "Painel" },
         { path: "/agendamentos", icon: CalendarCheck, label: "Agenda" },
-        { path: "/usuarios", icon: Users, label: "Usuários" },
+        { path: "/relatorios", icon: BarChart3, label: "Relatórios" },
         { path: "/perfil", icon: User, label: "Perfil" },
       ];
     }
@@ -54,7 +55,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       return [
         { path: "/corte-atual", icon: Scissors, label: "Atual" },
         { path: "/agendamentos", icon: CalendarCheck, label: "Agenda" },
-        { path: "/dashboard", icon: Home, label: "Painel" },
+        { path: "/relatorios", icon: BarChart3, label: "Relatórios" },
         { path: "/perfil", icon: User, label: "Perfil" },
       ];
     }
@@ -63,7 +64,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       return [
         { path: "/corte-atual", icon: Scissors, label: "Atual" },
         { path: "/agendamentos", icon: CalendarCheck, label: "Agenda" },
-        { path: "/servicos", icon: ClipboardList, label: "Serviços" },
+        { path: "/relatorios", icon: BarChart3, label: "Relatórios" },
         { path: "/perfil", icon: User, label: "Perfil" },
       ];
     }
