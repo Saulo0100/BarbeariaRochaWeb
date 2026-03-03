@@ -99,6 +99,10 @@ export interface ServicoDetalhesResponse {
   valor: number;
   tempoEstimado: string;
   categoria: string;
+  requerDuasEtapas: boolean;
+  intervaloMinimoHoras: number;
+  descricaoEtapa1?: string | null;
+  descricaoEtapa2?: string | null;
 }
 
 export interface ExcecaoDetalhesResponse {
@@ -141,6 +145,7 @@ export interface AgendamentoCriarRequest {
   usuarioId?: number;
   servicoId: number;
   dtAgendamento: string;
+  dtAgendamentoEtapa2?: string;
   numero: string;
   nome: string;
   codigoConfirmacao: number;
@@ -273,6 +278,17 @@ export interface HorariosDisponiveisResponse {
   diaSemana: string;
   horariosDisponiveis: string[];
   horariosOcupados: string[];
+}
+
+export interface HorariosDisponiveisServicoResponse {
+  data: string;
+  aberto: boolean;
+  diaSemana: string;
+  horariosDisponiveis: string[];
+  horariosOcupados: string[];
+  horariosDisponiveisEtapa2: string[];
+  requerDuasEtapas: boolean;
+  intervaloMinimoHoras: number;
 }
 
 // ===== FILTRO MODELS =====

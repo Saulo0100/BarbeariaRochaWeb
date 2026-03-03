@@ -67,11 +67,16 @@ export default function Agendar() {
   const [selectedServico, setSelectedServico] = useState<ServicoDetalhesResponse | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [selectedTimeEtapa2, setSelectedTimeEtapa2] = useState<string | null>(null);
   const [nome, setNome] = useState(user?.nome || "");
   const [numero, setNumero] = useState(user?.numero || "");
   const [tokenSent, setTokenSent] = useState(false);
   const [codigoConfirmacao, setCodigoConfirmacao] = useState("");
   const [calendarMonth, setCalendarMonth] = useState(new Date());
+
+  // Multi-slot state
+  const [horariosEtapa2, setHorariosEtapa2] = useState<string[]>([]);
+  const [loadingEtapa2, setLoadingEtapa2] = useState(false);
 
   useEffect(() => {
     usuarioApi.listarBarbeiros().then((r) => {
@@ -89,44 +94,95 @@ export default function Agendar() {
   }, [user]);
 
   // Fetch horarios disponiveis when barbeiro and date change
-  // Uses the new /api/horario/disponiveis endpoint that respects business rules
+  // Uses service-aware endpoint for multi-slot services
   const [horariosDisponiveis, setHorariosDisponiveis] = useState<string[]>([]);
   const [barbeariaAberta, setBarbeariaAberta] = useState(true);
+
+  /** Check if the selected service needs multi-slot handling */
+  const isMultiSlotService = selectedServico
+    ? selectedServico.requerDuasEtapas || selectedServico.tempoEstimado === "01:20:00"
+    : false;
+
+  const isDuasEtapas = selectedServico?.requerDuasEtapas || false;
 
   useEffect(() => {
     if (selectedBarbeiro && selectedDate) {
       const dateStr = toLocalDateStr(selectedDate);
-      horarioApi
-        .disponiveis(selectedBarbeiro.id, dateStr)
-        .then((r) => {
-          const data = r.data;
-          setBarbeariaAberta(data.aberto);
-          setHorariosDisponiveis(data.horariosDisponiveis || []);
-          setHorariosOcupados(data.horariosOcupados || []);
-        })
-        .catch(() => {
-          // Fallback: use old endpoint if new one not available
-          agendamentoApi
-            .horariosOcupados(selectedBarbeiro.id, dateStr)
-            .then((r) => {
-              const data = r.data;
-              if (Array.isArray(data) && data.length > 0) {
-                const horarios = data[0].horarios || [];
-                setHorariosOcupados(
-                  horarios.map((h: string) => {
-                    const parts = h.split(":");
-                    return `${parts[0].padStart(2, "0")}:${parts[1].padStart(2, "0")}`;
-                  })
-                );
-              } else {
-                setHorariosOcupados([]);
-              }
-              setHorariosDisponiveis([]);
-            })
-            .catch(() => setHorariosOcupados([]));
-        });
+
+      // Reset etapa2 selections when date changes
+      setSelectedTimeEtapa2(null);
+      setHorariosEtapa2([]);
+
+      if (selectedServico && isMultiSlotService) {
+        // Use service-aware endpoint
+        horarioApi
+          .disponiveisPorServico(selectedBarbeiro.id, dateStr, selectedServico.id)
+          .then((r) => {
+            const data = r.data;
+            setBarbeariaAberta(data.aberto);
+            setHorariosDisponiveis(data.horariosDisponiveis || []);
+            setHorariosOcupados(data.horariosOcupados || []);
+          })
+          .catch(() => {
+            // Fallback to normal endpoint
+            horarioApi.disponiveis(selectedBarbeiro.id, dateStr).then((r) => {
+              setBarbeariaAberta(r.data.aberto);
+              setHorariosDisponiveis(r.data.horariosDisponiveis || []);
+              setHorariosOcupados(r.data.horariosOcupados || []);
+            }).catch(() => {});
+          });
+      } else {
+        // Normal service: use standard endpoint
+        horarioApi
+          .disponiveis(selectedBarbeiro.id, dateStr)
+          .then((r) => {
+            const data = r.data;
+            setBarbeariaAberta(data.aberto);
+            setHorariosDisponiveis(data.horariosDisponiveis || []);
+            setHorariosOcupados(data.horariosOcupados || []);
+          })
+          .catch(() => {
+            // Fallback: use old endpoint if new one not available
+            agendamentoApi
+              .horariosOcupados(selectedBarbeiro.id, dateStr)
+              .then((r) => {
+                const data = r.data;
+                if (Array.isArray(data) && data.length > 0) {
+                  const horarios = data[0].horarios || [];
+                  setHorariosOcupados(
+                    horarios.map((h: string) => {
+                      const parts = h.split(":");
+                      return `${parts[0].padStart(2, "0")}:${parts[1].padStart(2, "0")}`;
+                    })
+                  );
+                } else {
+                  setHorariosOcupados([]);
+                }
+                setHorariosDisponiveis([]);
+              })
+              .catch(() => setHorariosOcupados([]));
+          });
+      }
     }
-  }, [selectedBarbeiro, selectedDate]);
+  }, [selectedBarbeiro, selectedDate, selectedServico, isMultiSlotService]);
+
+  // Fetch etapa2 slots when user picks stage 1 time for RequerDuasEtapas services
+  useEffect(() => {
+    if (isDuasEtapas && selectedBarbeiro && selectedDate && selectedTime && selectedServico) {
+      setLoadingEtapa2(true);
+      setSelectedTimeEtapa2(null);
+      const dateStr = toLocalDateStr(selectedDate);
+      horarioApi
+        .disponiveisEtapa2(selectedBarbeiro.id, dateStr, selectedServico.id, selectedTime)
+        .then((r) => {
+          setHorariosEtapa2(r.data.horariosDisponiveisEtapa2 || []);
+        })
+        .catch(() => setHorariosEtapa2([]))
+        .finally(() => setLoadingEtapa2(false));
+    } else {
+      setHorariosEtapa2([]);
+    }
+  }, [isDuasEtapas, selectedBarbeiro, selectedDate, selectedTime, selectedServico]);
 
   const formatNumero = (value: string) => {
     const digits = value.replace(/\D/g, "").slice(0, 11);
@@ -155,6 +211,10 @@ export default function Agendar() {
 
   const handleConfirm = async () => {
     if (!selectedBarbeiro || !selectedServico || !selectedDate || !selectedTime) return;
+    if (isDuasEtapas && !selectedTimeEtapa2) {
+      toast.error("Selecione o horário da segunda etapa");
+      return;
+    }
     if (!codigoConfirmacao) {
       toast.error("Informe o código de confirmação");
       return;
@@ -163,12 +223,19 @@ export default function Agendar() {
     const [h, m] = selectedTime.split(":");
     const dtStr = `${toLocalDateStr(selectedDate)}T${h.padStart(2, "0")}:${m.padStart(2, "0")}:00`;
 
+    let dtEtapa2Str: string | undefined;
+    if (isDuasEtapas && selectedTimeEtapa2) {
+      const [h2, m2] = selectedTimeEtapa2.split(":");
+      dtEtapa2Str = `${toLocalDateStr(selectedDate)}T${h2.padStart(2, "0")}:${m2.padStart(2, "0")}:00`;
+    }
+
     setLoading(true);
     try {
       await agendamentoApi.criar({
         barbeiroId: selectedBarbeiro.id,
         servicoId: selectedServico.id,
         dtAgendamento: dtStr,
+        dtAgendamentoEtapa2: dtEtapa2Str,
         numero: numero.replace(/\D/g, ""),
         nome,
         codigoConfirmacao: parseInt(codigoConfirmacao),
@@ -198,7 +265,11 @@ export default function Agendar() {
   const canGoNext = () => {
     if (step === 0) return !!selectedBarbeiro;
     if (step === 1) return !!selectedServico;
-    if (step === 2) return !!selectedDate && !!selectedTime;
+    if (step === 2) {
+      if (!selectedDate || !selectedTime) return false;
+      if (isDuasEtapas && !selectedTimeEtapa2) return false;
+      return true;
+    }
     if (step === 3) return !!nome && numero.replace(/\D/g, "").length === 11 && tokenSent && !!codigoConfirmacao;
     return false;
   };
@@ -401,6 +472,22 @@ export default function Agendar() {
                 </div>
               </div>
 
+              {/* Multi-slot info banner */}
+              {isMultiSlotService && (
+                <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 mb-4">
+                  <p className="text-xs font-semibold text-primary">
+                    {isDuasEtapas
+                      ? `Este serviço requer 2 horários com ${selectedServico?.intervaloMinimoHoras}h de intervalo`
+                      : "Este serviço ocupa 2 horários consecutivos"}
+                  </p>
+                  {isDuasEtapas && selectedServico && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      1\u00BA horário: {selectedServico.descricaoEtapa1 || "Etapa 1"} | 2\u00BA horário: {selectedServico.descricaoEtapa2 || "Etapa 2"}
+                    </p>
+                  )}
+                </div>
+              )}
+
               {/* Time Slots */}
               {selectedDate && !barbeariaAberta && (
                 <div className="text-center py-6">
@@ -411,7 +498,9 @@ export default function Agendar() {
                 <div>
                   <p className="text-sm font-medium mb-2 flex items-center gap-2">
                     <Clock className="w-4 h-4 text-primary" />
-                    Horários disponíveis
+                    {isDuasEtapas
+                      ? `1\u00BA Horário - ${selectedServico?.descricaoEtapa1 || "Etapa 1"}`
+                      : "Horários disponíveis"}
                   </p>
                   {horariosDisponiveis.length > 0 ? (
                     <div className="grid grid-cols-4 gap-2">
@@ -420,7 +509,10 @@ export default function Agendar() {
                         return (
                           <button
                             key={slot}
-                            onClick={() => setSelectedTime(slot)}
+                            onClick={() => {
+                              setSelectedTime(slot);
+                              setSelectedTimeEtapa2(null);
+                            }}
                             className={`py-2 rounded-md text-xs font-medium transition-all ${
                               isSelected
                                 ? "gold-gradient text-background font-bold"
@@ -434,12 +526,56 @@ export default function Agendar() {
                     </div>
                   ) : horariosOcupados.length > 0 ? (
                     <p className="text-center text-sm text-muted-foreground py-4">
-                      Todos os horários estão ocupados para este dia
+                      {isMultiSlotService
+                        ? "Não há horários com disponibilidade para este serviço neste dia"
+                        : "Todos os horários estão ocupados para este dia"}
                     </p>
                   ) : (
                     <p className="text-center text-sm text-muted-foreground py-4">
                       Carregando horários...
                     </p>
+                  )}
+
+                  {/* Stage 2 time picker for RequerDuasEtapas services */}
+                  {isDuasEtapas && selectedTime && (
+                    <div className="mt-4">
+                      <p className="text-sm font-medium mb-2 flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-primary" />
+                        2\u00BA Horário - {selectedServico?.descricaoEtapa2 || "Etapa 2"}
+                        <span className="text-xs text-muted-foreground">
+                          (mín. {selectedServico?.intervaloMinimoHoras}h após o 1\u00BA)
+                        </span>
+                      </p>
+                      {loadingEtapa2 ? (
+                        <div className="flex items-center justify-center py-4">
+                          <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                          <span className="ml-2 text-xs text-muted-foreground">Carregando horários...</span>
+                        </div>
+                      ) : horariosEtapa2.length > 0 ? (
+                        <div className="grid grid-cols-4 gap-2">
+                          {horariosEtapa2.map((slot) => {
+                            const isSelected = selectedTimeEtapa2 === slot;
+                            return (
+                              <button
+                                key={slot}
+                                onClick={() => setSelectedTimeEtapa2(slot)}
+                                className={`py-2 rounded-md text-xs font-medium transition-all ${
+                                  isSelected
+                                    ? "gold-gradient text-background font-bold"
+                                    : "bg-card border border-border hover:border-primary/30 text-foreground"
+                                }`}
+                              >
+                                {slot}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <p className="text-center text-sm text-muted-foreground py-4">
+                          Nenhum horário disponível para a 2\u00AA etapa neste dia
+                        </p>
+                      )}
+                    </div>
                   )}
                 </div>
               )}
@@ -541,7 +677,20 @@ export default function Agendar() {
                         month: "long",
                       })}{" "}
                       às {selectedTime}
+                      {isDuasEtapas && selectedServico && (
+                        <span className="text-xs text-muted-foreground ml-1">
+                          ({selectedServico.descricaoEtapa1 || "Etapa 1"})
+                        </span>
+                      )}
                     </p>
+                    {isDuasEtapas && selectedTimeEtapa2 && selectedServico && (
+                      <p className="font-semibold text-sm text-primary mt-0.5">
+                        2\u00BA horário: {selectedTimeEtapa2}
+                        <span className="text-xs text-muted-foreground ml-1">
+                          ({selectedServico.descricaoEtapa2 || "Etapa 2"})
+                        </span>
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div className="p-4 flex items-center gap-3">
