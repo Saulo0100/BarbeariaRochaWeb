@@ -1,6 +1,6 @@
 /*
  * Design: Vintage Barbershop — Relatórios / BI do Barbeiro
- * Dashboard com métricas detalhadas: cortes, faturamento, serviços mais pedidos, clientes frequentes
+ * Dashboard com métricas detalhadas: atendimentos, faturamento, serviços mais pedidos, clientes frequentes
  */
 import { useEffect, useState } from "react";
 import { relatorioApi, usuarioApi } from "@/lib/api";
@@ -99,9 +99,7 @@ export default function Relatorios() {
       filtro.dataInicio = start.toISOString().split("T")[0];
       filtro.dataFim = now.toISOString().split("T")[0];
     } else if (periodo === "todos") {
-      const start = new Date(now.getFullYear(), now.getMonth(), 1);
-      filtro.dataInicio = start.toISOString().split("T")[0];
-      filtro.dataFim = now.toISOString().split("T")[0];
+      // Sem filtro de data — retorna todos os registros
     }
 
     // If barber is selected from dropdown, use it
@@ -192,74 +190,63 @@ export default function Relatorios() {
         </select>
       )}
 
-      {/* Stats Cards - Row 1 */}
+      {/* Stats Cards */}
       {geral && (
         <>
+          {/* Row 1: Atendimentos e Faturamento do período */}
           <div className="grid grid-cols-2 gap-3">
             <StatCard
               icon={Scissors}
-              label="Cortes Hoje"
-              value={String(geral.cortesHoje)}
+              label="Atendimentos"
+              value={String(geral.totalAtendimentos)}
               delay={0}
             />
             <StatCard
               icon={DollarSign}
-              label="Faturamento Hoje"
-              value={formatCurrency(geral.faturamentoHoje)}
+              label="Faturamento"
+              value={formatCurrency(geral.faturamentoTotal)}
               delay={0.05}
-            />
-            <StatCard
-              icon={Calendar}
-              label="Cortes no Mês"
-              value={String(geral.cortesMes)}
-              delay={0.1}
-            />
-            <StatCard
-              icon={TrendingUp}
-              label="Faturamento Mês"
-              value={formatCurrency(geral.faturamentoMes)}
-              delay={0.15}
             />
           </div>
 
-          {/* Stats Cards - Row 2 */}
+          {/* Row 2: Ticket Médio, Pendentes, Cancelamentos */}
           <div className="grid grid-cols-3 gap-3">
             <StatCard
-              icon={BarChart3}
-              label="Total Cortes"
-              value={String(geral.totalCortes)}
-              delay={0.2}
+              icon={TrendingUp}
+              label="Ticket Médio"
+              value={formatCurrency(geral.ticketMedio)}
+              delay={0.1}
               small
             />
             <StatCard
-              icon={DollarSign}
-              label="Ticket Médio"
-              value={formatCurrency(geral.ticketMedio)}
-              delay={0.25}
+              icon={Calendar}
+              label="Pendentes"
+              value={String(geral.agendamentosPendentes)}
+              delay={0.15}
               small
             />
             <StatCard
               icon={XCircle}
               label="Cancelamentos"
               value={String(geral.cancelamentosTotal)}
-              delay={0.3}
+              delay={0.2}
               small
             />
           </div>
 
-          {/* Stats Cards - Row 3: No-show & Rates */}
+          {/* Row 3: Faltas e Taxas */}
           <div className="grid grid-cols-2 gap-3">
             <StatCard
               icon={UserX}
-              label="Clientes Faltaram"
+              label="Faltas"
               value={String(geral.clientesFaltaram)}
-              delay={0.35}
+              delay={0.25}
             />
             <StatCard
               icon={CheckCircle}
               label="Taxa de Conclusão"
               value={`${geral.taxaConclusao.toFixed(1)}%`}
-              delay={0.4}
+              delay={0.3}
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -267,13 +254,13 @@ export default function Relatorios() {
               icon={UserX}
               label="Taxa de Faltas"
               value={`${geral.taxaFaltas.toFixed(1)}%`}
-              delay={0.45}
+              delay={0.35}
             />
             <StatCard
               icon={Percent}
               label="Taxa Cancelamento"
               value={`${geral.taxaCancelamento.toFixed(1)}%`}
-              delay={0.5}
+              delay={0.4}
             />
           </div>
         </>
@@ -442,12 +429,12 @@ export default function Relatorios() {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{c.nomeCliente}</p>
                   <p className="text-xs text-muted-foreground">
-                    {c.totalCortes} cortes • {formatCurrency(c.totalGasto)}
+                    {c.totalAtendimentos} atendimentos • {formatCurrency(c.totalGasto)}
                   </p>
                 </div>
-                {c.ultimoCorte && (
+                {c.ultimoAtendimento && (
                   <span className="text-[10px] text-muted-foreground shrink-0">
-                    Último: {new Date(c.ultimoCorte).toLocaleDateString("pt-BR")}
+                    Último: {new Date(c.ultimoAtendimento).toLocaleDateString("pt-BR")}
                   </span>
                 )}
               </div>
@@ -457,7 +444,7 @@ export default function Relatorios() {
       )}
 
       {/* Empty state */}
-      {!loading && geral && geral.totalCortes === 0 && (
+      {!loading && geral && geral.totalAtendimentos === 0 && (
         <div className="text-center py-8">
           <BarChart3 className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
           <p className="text-sm text-muted-foreground">
