@@ -200,6 +200,74 @@ export interface MensalistaCriarRequest {
   tipo: MensalistaTipo;
 }
 
+// ===== RELATORIO RESPONSE MODELS =====
+export interface RelatorioGeralResponse {
+  totalCortes: number;
+  cortesHoje: number;
+  cortesSemana: number;
+  cortesMes: number;
+  faturamentoTotal: number;
+  faturamentoHoje: number;
+  faturamentoSemana: number;
+  faturamentoMes: number;
+  ticketMedio: number;
+  agendamentosPendentes: number;
+  cancelamentosTotal: number;
+}
+
+export interface ServicoMaisPedidoResponse {
+  servicoId: number;
+  nomeServico: string;
+  categoria?: string;
+  quantidade: number;
+  valorTotal: number;
+  percentualTotal: number;
+}
+
+export interface ClienteFrequenteResponse {
+  nomeCliente: string;
+  numeroCliente: string;
+  totalCortes: number;
+  ultimoCorte?: string;
+  totalGasto: number;
+}
+
+export interface FaturamentoPorPeriodoResponse {
+  periodo: string;
+  totalCortes: number;
+  faturamento: number;
+}
+
+export interface FaturamentoPorMetodoResponse {
+  metodoPagamento: string;
+  quantidade: number;
+  valorTotal: number;
+  percentual: number;
+}
+
+export interface RelatorioBarbeiroResponse {
+  barbeiroId: number;
+  nomeBarbeiro: string;
+  totalCortes: number;
+  faturamento: number;
+  ticketMedio: number;
+  cancelamentosTotal: number;
+}
+
+export interface RelatorioFiltroRequest {
+  barbeiroId?: number;
+  dataInicio?: string;
+  dataFim?: string;
+}
+
+export interface HorariosDisponiveisResponse {
+  data: string;
+  aberto: boolean;
+  diaSemana: string;
+  horariosDisponiveis: string[];
+  horariosOcupados: string[];
+}
+
 // ===== FILTRO MODELS =====
 export interface AgendamentoFiltroRequest {
   barbeiroId?: number;

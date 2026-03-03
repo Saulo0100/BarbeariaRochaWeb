@@ -6,18 +6,26 @@ import type {
   AgendamentoDetalheResponse,
   AgendamentoFiltroRequest,
   BarbeirosDetalhesResponse,
+  ClienteFrequenteResponse,
   ExcecaoCriarRequest,
   ExcecaoDetalhesResponse,
   ExcecaoFiltroRequest,
+  FaturamentoPorMetodoResponse,
+  FaturamentoPorPeriodoResponse,
+  HorariosDisponiveisResponse,
   HorariosOcupadosResponse,
   LoginRequest,
   EsqueceuSenhaRequest,
   MensalistaCriarRequest,
   MensalistaResponse,
   PaginacaoResultado,
+  RelatorioBarbeiroResponse,
+  RelatorioFiltroRequest,
+  RelatorioGeralResponse,
   ServicoCriarRequest,
   ServicoDetalhesResponse,
   ServicoFiltroRequest,
+  ServicoMaisPedidoResponse,
   UsuarioCriarRequest,
   UsuarioDetalhesResponse,
   UsuarioEditarRequest,
@@ -215,6 +223,77 @@ export const mensalistaApi = {
 
   listar: () =>
     api.get<MensalistaResponse[]>("/api/Mensalista"),
+};
+
+// ===== RELATÓRIO =====
+export const relatorioApi = {
+  geral: (filtro?: RelatorioFiltroRequest) =>
+    api.get<RelatorioGeralResponse>("/api/relatorio/geral", {
+      params: {
+        BarbeiroId: filtro?.barbeiroId || undefined,
+        DataInicio: filtro?.dataInicio || undefined,
+        DataFim: filtro?.dataFim || undefined,
+      },
+    }),
+
+  servicosMaisPedidos: (filtro?: RelatorioFiltroRequest, top = 10) =>
+    api.get<ServicoMaisPedidoResponse[]>("/api/relatorio/servicos-mais-pedidos", {
+      params: {
+        BarbeiroId: filtro?.barbeiroId || undefined,
+        DataInicio: filtro?.dataInicio || undefined,
+        DataFim: filtro?.dataFim || undefined,
+        top,
+      },
+    }),
+
+  clientesFrequentes: (filtro?: RelatorioFiltroRequest, top = 10) =>
+    api.get<ClienteFrequenteResponse[]>("/api/relatorio/clientes-frequentes", {
+      params: {
+        BarbeiroId: filtro?.barbeiroId || undefined,
+        DataInicio: filtro?.dataInicio || undefined,
+        DataFim: filtro?.dataFim || undefined,
+        top,
+      },
+    }),
+
+  faturamentoDiario: (filtro?: RelatorioFiltroRequest) =>
+    api.get<FaturamentoPorPeriodoResponse[]>("/api/relatorio/faturamento-diario", {
+      params: {
+        BarbeiroId: filtro?.barbeiroId || undefined,
+        DataInicio: filtro?.dataInicio || undefined,
+        DataFim: filtro?.dataFim || undefined,
+      },
+    }),
+
+  faturamentoPorMetodo: (filtro?: RelatorioFiltroRequest) =>
+    api.get<FaturamentoPorMetodoResponse[]>("/api/relatorio/faturamento-por-metodo", {
+      params: {
+        BarbeiroId: filtro?.barbeiroId || undefined,
+        DataInicio: filtro?.dataInicio || undefined,
+        DataFim: filtro?.dataFim || undefined,
+      },
+    }),
+
+  porBarbeiro: (filtro?: RelatorioFiltroRequest) =>
+    api.get<RelatorioBarbeiroResponse[]>("/api/relatorio/por-barbeiro", {
+      params: {
+        DataInicio: filtro?.dataInicio || undefined,
+        DataFim: filtro?.dataFim || undefined,
+      },
+    }),
+};
+
+// ===== HORÁRIO =====
+export const horarioApi = {
+  disponiveis: (barbeiroId: number, data: string) =>
+    api.get<HorariosDisponiveisResponse>("/api/horario/disponiveis", {
+      params: { barbeiroId, data },
+    }),
+
+  todos: (data: string) =>
+    api.get<string[]>("/api/horario/todos", {
+      params: { data },
+    }),
 };
 
 export default api;

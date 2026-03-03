@@ -61,10 +61,11 @@ export default function Dashboard() {
   const quickLinks = [
     ...(isBarbeiroAdmin ? [{ href: "/corte-atual", icon: Scissors, label: "Corte Atual", color: "text-yellow-400" }] : []),
     { href: "/agendamentos", icon: CalendarCheck, label: "Agendamentos", color: "text-emerald-400" },
+    { href: "/relatorios", icon: TrendingUp, label: "Relatórios", color: "text-amber-400" },
     { href: "/usuarios", icon: Users, label: "Usuários", color: "text-blue-400" },
-    { href: "/servicos-admin", icon: ClipboardList, label: "Serviços", color: "text-amber-400" },
+    { href: "/servicos-admin", icon: ClipboardList, label: "Serviços", color: "text-orange-400" },
     { href: "/excecoes", icon: AlertTriangle, label: "Exceções", color: "text-red-400" },
-    { href: "/mensalistas", icon: TrendingUp, label: "Mensalistas", color: "text-purple-400" },
+    { href: "/mensalistas", icon: Calendar, label: "Mensalistas", color: "text-purple-400" },
     { href: "/configuracoes", icon: Clock, label: "Configurações", color: "text-gray-400" },
   ];
 

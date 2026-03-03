@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
-import { agendamentoApi, servicoApi, tokenApi, usuarioApi } from "@/lib/api";
+import { agendamentoApi, horarioApi, servicoApi, tokenApi, usuarioApi } from "@/lib/api";
 import type { BarbeirosDetalhesResponse, ServicoDetalhesResponse } from "@/lib/types";
 import {
   ArrowLeft,
@@ -26,13 +26,6 @@ import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 
 const STEPS = ["Barbeiro", "Serviço", "Data", "Dados", "Confirmar"];
-
-// Gerar horários de 08:00 às 20:00 a cada 30 min
-const ALL_SLOTS = Array.from({ length: 25 }, (_, i) => {
-  const h = Math.floor(i / 2) + 8;
-  const m = i % 2 === 0 ? "00" : "30";
-  return `${String(h).padStart(2, "0")}:${m}`;
-});
 
 export default function Agendar() {
   const { user, isAuthenticated } = useAuth();
@@ -71,27 +64,43 @@ export default function Agendar() {
     }
   }, [user]);
 
-  // Fetch horários ocupados when barbeiro and date change
+  // Fetch horarios disponiveis when barbeiro and date change
+  // Uses the new /api/horario/disponiveis endpoint that respects business rules
+  const [horariosDisponiveis, setHorariosDisponiveis] = useState<string[]>([]);
+  const [barbeariaAberta, setBarbeariaAberta] = useState(true);
+
   useEffect(() => {
     if (selectedBarbeiro && selectedDate) {
       const dateStr = selectedDate.toISOString().split("T")[0];
-      agendamentoApi
-        .horariosOcupados(selectedBarbeiro.id, dateStr)
+      horarioApi
+        .disponiveis(selectedBarbeiro.id, dateStr)
         .then((r) => {
           const data = r.data;
-          if (Array.isArray(data) && data.length > 0) {
-            const horarios = data[0].horarios || [];
-            setHorariosOcupados(
-              horarios.map((h: string) => {
-                const parts = h.split(":");
-                return `${parts[0].padStart(2, "0")}:${parts[1].padStart(2, "0")}`;
-              })
-            );
-          } else {
-            setHorariosOcupados([]);
-          }
+          setBarbeariaAberta(data.aberto);
+          setHorariosDisponiveis(data.horariosDisponiveis || []);
+          setHorariosOcupados(data.horariosOcupados || []);
         })
-        .catch(() => setHorariosOcupados([]));
+        .catch(() => {
+          // Fallback: use old endpoint if new one not available
+          agendamentoApi
+            .horariosOcupados(selectedBarbeiro.id, dateStr)
+            .then((r) => {
+              const data = r.data;
+              if (Array.isArray(data) && data.length > 0) {
+                const horarios = data[0].horarios || [];
+                setHorariosOcupados(
+                  horarios.map((h: string) => {
+                    const parts = h.split(":");
+                    return `${parts[0].padStart(2, "0")}:${parts[1].padStart(2, "0")}`;
+                  })
+                );
+              } else {
+                setHorariosOcupados([]);
+              }
+              setHorariosDisponiveis([]);
+            })
+            .catch(() => setHorariosOcupados([]));
+        });
     }
   }, [selectedBarbeiro, selectedDate]);
 
@@ -368,43 +377,45 @@ export default function Agendar() {
               </div>
 
               {/* Time Slots */}
-              {selectedDate && (
+              {selectedDate && !barbeariaAberta && (
+                <div className="text-center py-6">
+                  <p className="text-sm text-muted-foreground">Barbearia fechada neste dia</p>
+                </div>
+              )}
+              {selectedDate && barbeariaAberta && (
                 <div>
                   <p className="text-sm font-medium mb-2 flex items-center gap-2">
                     <Clock className="w-4 h-4 text-primary" />
                     Horários disponíveis
                   </p>
-                  <div className="grid grid-cols-4 gap-2">
-                    {ALL_SLOTS.map((slot) => {
-                      const isOcupado = horariosOcupados.includes(slot);
-                      const isSelected = selectedTime === slot;
-                      // Check if time is in the past for today
-                      const now = new Date();
-                      let isPastTime = false;
-                      if (selectedDate.toDateString() === now.toDateString()) {
-                        const [sh, sm] = slot.split(":").map(Number);
-                        isPastTime = sh < now.getHours() || (sh === now.getHours() && sm <= now.getMinutes());
-                      }
-                      const isDisabled = isOcupado || isPastTime;
-
-                      return (
-                        <button
-                          key={slot}
-                          disabled={isDisabled}
-                          onClick={() => setSelectedTime(slot)}
-                          className={`py-2 rounded-md text-xs font-medium transition-all ${
-                            isSelected
-                              ? "gold-gradient text-background font-bold"
-                              : isDisabled
-                              ? "bg-muted/50 text-muted-foreground/30 line-through"
-                              : "bg-card border border-border hover:border-primary/30 text-foreground"
-                          }`}
-                        >
-                          {slot}
-                        </button>
-                      );
-                    })}
-                  </div>
+                  {horariosDisponiveis.length > 0 ? (
+                    <div className="grid grid-cols-4 gap-2">
+                      {horariosDisponiveis.map((slot) => {
+                        const isSelected = selectedTime === slot;
+                        return (
+                          <button
+                            key={slot}
+                            onClick={() => setSelectedTime(slot)}
+                            className={`py-2 rounded-md text-xs font-medium transition-all ${
+                              isSelected
+                                ? "gold-gradient text-background font-bold"
+                                : "bg-card border border-border hover:border-primary/30 text-foreground"
+                            }`}
+                          >
+                            {slot}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : horariosOcupados.length > 0 ? (
+                    <p className="text-center text-sm text-muted-foreground py-4">
+                      Todos os horários estão ocupados para este dia
+                    </p>
+                  ) : (
+                    <p className="text-center text-sm text-muted-foreground py-4">
+                      Carregando horários...
+                    </p>
+                  )}
                 </div>
               )}
             </div>
