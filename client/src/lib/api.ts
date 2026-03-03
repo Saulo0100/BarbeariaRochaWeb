@@ -162,6 +162,9 @@ export const agendamentoApi = {
   cancelar: (id: number) =>
     api.delete(`/api/agendamento/${id}`),
 
+  marcarClienteFaltou: (id: number) =>
+    api.patch(`/api/agendamento/${id}/ClienteFaltou`),
+
   listar: (pagina = 1, itensPorPagina = 10, filtro?: AgendamentoFiltroRequest) =>
     api.get<PaginacaoResultado<AgendamentoDetalheResponse>>("/api/agendamento", {
       params: {

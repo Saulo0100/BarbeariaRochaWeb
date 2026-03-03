@@ -25,6 +25,7 @@ import {
   RefreshCw,
   CreditCard,
   Edit3,
+  UserX,
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
@@ -44,6 +45,7 @@ export default function CorteAtual() {
   const [completing, setCompleting] = useState(false);
   const [metodoPagamento, setMetodoPagamento] = useState<string>("");
   const [mode, setMode] = useState<"view" | "complete" | "edit">("view");
+  const [markingNoShow, setMarkingNoShow] = useState(false);
 
   const fetchCorteAtual = useCallback(() => {
     setLoading(true);
@@ -60,6 +62,20 @@ export default function CorteAtual() {
     const interval = setInterval(fetchCorteAtual, 30000);
     return () => clearInterval(interval);
   }, [fetchCorteAtual]);
+
+  const handleClienteFaltou = async () => {
+    if (!corte) return;
+    setMarkingNoShow(true);
+    try {
+      await agendamentoApi.marcarClienteFaltou(corte.id);
+      toast.success("Marcado como cliente faltou");
+      fetchCorteAtual();
+    } catch (err: any) {
+      toast.error(err.response?.data || "Erro ao marcar falta");
+    } finally {
+      setMarkingNoShow(false);
+    }
+  };
 
   const handleCompletar = async () => {
     if (!corte || !metodoPagamento) {
@@ -184,20 +200,37 @@ export default function CorteAtual() {
             {/* Actions */}
             <div className="p-4 border-t border-border">
               {mode === "view" && (
-                <div className="flex gap-2">
-                  <Button
-                    onClick={() => setMode("complete")}
-                    className="flex-1 h-11 gold-gradient text-background font-semibold text-sm"
-                  >
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                    Finalizar
-                  </Button>
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => setMode("complete")}
+                      className="flex-1 h-11 gold-gradient text-background font-semibold text-sm"
+                    >
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Finalizar
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setMode("edit")}
+                      className="h-11 border-primary/30 text-primary hover:bg-primary/10 text-sm"
+                    >
+                      <Edit3 className="w-4 h-4" />
+                    </Button>
+                  </div>
                   <Button
                     variant="outline"
-                    onClick={() => setMode("edit")}
-                    className="h-11 border-primary/30 text-primary hover:bg-primary/10 text-sm"
+                    onClick={handleClienteFaltou}
+                    disabled={markingNoShow}
+                    className="w-full h-10 border-amber-500/30 text-amber-400 hover:bg-amber-500/10 text-sm font-medium"
                   >
-                    <Edit3 className="w-4 h-4" />
+                    {markingNoShow ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <>
+                        <UserX className="w-4 h-4 mr-2" />
+                        Cliente Faltou
+                      </>
+                    )}
                   </Button>
                 </div>
               )}
