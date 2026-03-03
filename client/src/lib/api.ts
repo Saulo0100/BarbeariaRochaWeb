@@ -172,6 +172,7 @@ export const agendamentoApi = {
         Pagina: pagina,
         ItensPorPagina: itensPorPagina,
         "Filtro.BarbeiroId": filtro?.barbeiroId || undefined,
+        "Filtro.UsuarioId": filtro?.usuarioId || undefined,
         "Filtro.DtAgendamento": filtro?.dtAgendamento || undefined,
       },
     }),

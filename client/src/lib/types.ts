@@ -296,6 +296,7 @@ export interface HorariosDisponiveisServicoResponse {
 // ===== FILTRO MODELS =====
 export interface AgendamentoFiltroRequest {
   barbeiroId?: number;
+  usuarioId?: number;
   dtAgendamento?: string;
   servicos?: number[];
 }

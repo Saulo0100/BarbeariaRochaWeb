@@ -23,7 +23,9 @@ export default function Footer() {
             <Clock className="w-4 h-4 text-primary mt-0.5 shrink-0" />
             <div>
               <p className="font-medium text-foreground text-xs">Horário de Funcionamento</p>
-              <p className="text-xs">Seg - Sáb: 08:00 - 20:00</p>
+              <p className="text-xs">Seg: 13:20 - 20:00</p>
+              <p className="text-xs">Ter - Sex: 10:00 - 20:00</p>
+              <p className="text-xs">Sáb: 09:00 - 17:20</p>
               <p className="text-xs">Dom: Fechado</p>
             </div>
           </div>
