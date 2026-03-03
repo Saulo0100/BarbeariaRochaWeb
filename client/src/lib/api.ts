@@ -35,7 +35,7 @@ import type {
 
 // A URL base da API deve ser configurada aqui
 // O usuário vai precisar ajustar para apontar ao backend real
-const API_BASE_URL = localStorage.getItem("apiBaseUrl") || "https://sua-api.com";
+const API_BASE_URL = localStorage.getItem("apiBaseUrl") || "https://localhost:44396";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -163,7 +163,7 @@ export const agendamentoApi = {
     api.delete(`/api/agendamento/${id}`),
 
   marcarClienteFaltou: (id: number) =>
-    api.patch(`/api/agendamento/${id}/ClienteFaltou`, {}),
+    api.post(`/api/agendamento/${id}/ClienteFaltou`),
 
   listar: (pagina = 1, itensPorPagina = 10, filtro?: AgendamentoFiltroRequest) =>
     api.get<PaginacaoResultado<AgendamentoDetalheResponse>>("/api/agendamento", {
