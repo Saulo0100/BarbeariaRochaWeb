@@ -85,7 +85,12 @@ export default function MeusCortes() {
                   <span className={`text-xs font-medium ${statusColors[ag.status] || "text-muted-foreground"}`}>
                     {statusLabels[ag.status] || ag.status}
                   </span>
-                  <h3 className="font-semibold text-sm mt-0.5">{ag.servico}</h3>
+                  <h3 className="font-semibold text-sm mt-0.5">
+                    {ag.servico}
+                    {ag.descricaoEtapa && (
+                      <span className="text-xs text-primary ml-1">({ag.descricaoEtapa})</span>
+                    )}
+                  </h3>
                 </div>
                 <span className="text-xs text-muted-foreground">#{ag.id}</span>
               </div>
@@ -101,7 +106,7 @@ export default function MeusCortes() {
                 </div>
               </div>
 
-              {canCancel(ag.status) && (
+              {canCancel(ag.status) && !ag.agendamentoPrincipalId && (
                 <Button
                   variant="outline"
                   size="sm"

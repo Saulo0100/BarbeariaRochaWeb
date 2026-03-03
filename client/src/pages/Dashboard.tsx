@@ -148,7 +148,9 @@ export default function Dashboard() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{ag.nomeCliente}</p>
-                  <p className="text-xs text-muted-foreground">{ag.servico} • {ag.nomeBarbeiro}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {ag.servico}{ag.descricaoEtapa ? ` (${ag.descricaoEtapa})` : ""} • {ag.nomeBarbeiro}
+                  </p>
                 </div>
                 <span className="text-xs text-muted-foreground shrink-0">
                   {new Date(ag.data).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
