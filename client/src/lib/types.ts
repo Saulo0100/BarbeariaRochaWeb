@@ -3,6 +3,7 @@ export enum Perfil {
   Cliente = 1,
   Barbeiro = 2,
   Administrador = 3,
+  BarbeiroAdministrador = 4,
 }
 
 export enum AgendamentoStatus {

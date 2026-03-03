@@ -38,12 +38,14 @@ const perfilLabels: Record<number, string> = {
   1: "Cliente",
   2: "Barbeiro",
   3: "Administrador",
+  4: "Barbeiro Administrador",
 };
 
 const perfilColors: Record<number, string> = {
   1: "bg-blue-500/10 text-blue-400",
   2: "bg-amber-500/10 text-amber-400",
   3: "bg-purple-500/10 text-purple-400",
+  4: "bg-emerald-500/10 text-emerald-400",
 };
 
 export default function Usuarios() {
@@ -162,10 +164,11 @@ export default function Usuarios() {
                     <SelectItem value="1">Cliente</SelectItem>
                     <SelectItem value="2">Barbeiro</SelectItem>
                     <SelectItem value="3">Administrador</SelectItem>
+                    <SelectItem value="4">Barbeiro Administrador</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              {form.perfil === Perfil.Barbeiro && (
+              {(form.perfil === Perfil.Barbeiro || form.perfil === Perfil.BarbeiroAdministrador) && (
                 <div className="space-y-1">
                   <Label className="text-xs">Agenda</Label>
                   <Select value={String(form.agenda || "")} onValueChange={(v) => setForm({ ...form, agenda: parseInt(v) as TipoAgenda })}>
