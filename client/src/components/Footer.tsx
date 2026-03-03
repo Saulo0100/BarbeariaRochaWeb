@@ -33,14 +33,22 @@ export default function Footer() {
             <Phone className="w-4 h-4 text-primary mt-0.5 shrink-0" />
             <div>
               <p className="font-medium text-foreground text-xs">Contato</p>
-              <p className="text-xs">WhatsApp disponível no agendamento</p>
+              <a
+                href="https://wa.me/554198254308"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-primary hover:underline"
+              >
+                (41) 98254-308 — WhatsApp
+              </a>
             </div>
           </div>
           <div className="flex items-start gap-3">
             <MapPin className="w-4 h-4 text-primary mt-0.5 shrink-0" />
             <div>
               <p className="font-medium text-foreground text-xs">Localização</p>
-              <p className="text-xs">Configure o endereço nas configurações</p>
+              <p className="text-xs">R. Laérte Fenelon, 830 - Ipê</p>
+              <p className="text-xs">São José dos Pinhais - PR, 83055-050</p>
             </div>
           </div>
         </div>
