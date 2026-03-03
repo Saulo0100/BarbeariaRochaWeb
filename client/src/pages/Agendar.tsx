@@ -27,6 +27,30 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const STEPS = ["Barbeiro", "Serviço", "Data", "Dados", "Confirmar"];
 
+/** Formata Date como "YYYY-MM-DD" usando horário local (evita bug de fuso com toISOString) */
+const toLocalDateStr = (d: Date) => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
+
+/** Retorna data máxima permitida para agendamento com base no tipo de agenda do barbeiro */
+const getMaxDate = (agenda: string | undefined): Date => {
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+  switch (agenda?.toLowerCase()) {
+    case "semanal":
+      return new Date(hoje.getTime() + 7 * 86400000);
+    case "quinzenal":
+      return new Date(hoje.getTime() + 15 * 86400000);
+    case "mensal":
+      return new Date(hoje.getTime() + 30 * 86400000);
+    default:
+      return new Date(hoje.getTime() + 30 * 86400000); // padrão: mensal
+  }
+};
+
 export default function Agendar() {
   const { user, isAuthenticated } = useAuth();
   const [, setLocation] = useLocation();
@@ -71,7 +95,7 @@ export default function Agendar() {
 
   useEffect(() => {
     if (selectedBarbeiro && selectedDate) {
-      const dateStr = selectedDate.toISOString().split("T")[0];
+      const dateStr = toLocalDateStr(selectedDate);
       horarioApi
         .disponiveis(selectedBarbeiro.id, dateStr)
         .then((r) => {
@@ -136,16 +160,15 @@ export default function Agendar() {
       return;
     }
 
-    const dtAgendamento = new Date(selectedDate);
     const [h, m] = selectedTime.split(":");
-    dtAgendamento.setHours(parseInt(h), parseInt(m), 0, 0);
+    const dtStr = `${toLocalDateStr(selectedDate)}T${h.padStart(2, "0")}:${m.padStart(2, "0")}:00`;
 
     setLoading(true);
     try {
       await agendamentoApi.criar({
         barbeiroId: selectedBarbeiro.id,
         servicoId: selectedServico.id,
-        dtAgendamento: dtAgendamento.toISOString(),
+        dtAgendamento: dtStr,
         numero: numero.replace(/\D/g, ""),
         nome,
         codigoConfirmacao: parseInt(codigoConfirmacao),
@@ -349,9 +372,11 @@ export default function Agendar() {
                     const date = new Date(daysInMonth.year, daysInMonth.month, day);
                     const isPast = date < today;
                     const isSunday = date.getDay() === 0;
+                    const maxDate = selectedBarbeiro ? getMaxDate(selectedBarbeiro.agenda) : new Date(today.getTime() + 30 * 86400000);
+                    const isBeyondAgenda = date > maxDate;
                     const isSelected =
                       selectedDate?.toDateString() === date.toDateString();
-                    const isDisabled = isPast || isSunday;
+                    const isDisabled = isPast || isSunday || isBeyondAgenda;
 
                     return (
                       <button
