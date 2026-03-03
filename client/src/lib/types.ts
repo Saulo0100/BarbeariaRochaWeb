@@ -15,6 +15,7 @@ export enum AgendamentoStatus {
   Confirmado = 6,
   VouAtrasar = 7,
   SlotReservado = 8,
+  ClienteFaltou = 9,
 }
 
 export enum CategoriaServico {
@@ -213,6 +214,10 @@ export interface RelatorioGeralResponse {
   ticketMedio: number;
   agendamentosPendentes: number;
   cancelamentosTotal: number;
+  clientesFaltaram: number;
+  taxaFaltas: number;
+  taxaCancelamento: number;
+  taxaConclusao: number;
 }
 
 export interface ServicoMaisPedidoResponse {
@@ -252,6 +257,8 @@ export interface RelatorioBarbeiroResponse {
   faturamento: number;
   ticketMedio: number;
   cancelamentosTotal: number;
+  clientesFaltaram: number;
+  taxaConclusao: number;
 }
 
 export interface RelatorioFiltroRequest {
@@ -308,6 +315,7 @@ export const statusLabels: Record<string, string> = {
   Confirmado: "Confirmado",
   VouAtrasar: "Vou Atrasar",
   SlotReservado: "Slot Reservado",
+  ClienteFaltou: "Cliente Faltou",
 };
 
 export const statusColors: Record<string, string> = {
@@ -319,6 +327,7 @@ export const statusColors: Record<string, string> = {
   Confirmado: "text-emerald-400",
   VouAtrasar: "text-orange-400",
   SlotReservado: "text-purple-400",
+  ClienteFaltou: "text-amber-400",
 };
 
 export const metodoPagamentoLabels: Record<number, string> = {

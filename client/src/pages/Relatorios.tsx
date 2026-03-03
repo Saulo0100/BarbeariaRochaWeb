@@ -25,6 +25,9 @@ import {
   PieChart as PieChartIcon,
   Crown,
   XCircle,
+  UserX,
+  CheckCircle,
+  Percent,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import {
@@ -237,6 +240,36 @@ export default function Relatorios() {
               value={String(geral.cancelamentosTotal)}
               delay={0.3}
               small
+            />
+          </div>
+
+          {/* Stats Cards - Row 3: No-show & Rates */}
+          <div className="grid grid-cols-2 gap-3">
+            <StatCard
+              icon={UserX}
+              label="Clientes Faltaram"
+              value={String(geral.clientesFaltaram)}
+              delay={0.35}
+            />
+            <StatCard
+              icon={CheckCircle}
+              label="Taxa de Conclusão"
+              value={`${geral.taxaConclusao.toFixed(1)}%`}
+              delay={0.4}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <StatCard
+              icon={UserX}
+              label="Taxa de Faltas"
+              value={`${geral.taxaFaltas.toFixed(1)}%`}
+              delay={0.45}
+            />
+            <StatCard
+              icon={Percent}
+              label="Taxa Cancelamento"
+              value={`${geral.taxaCancelamento.toFixed(1)}%`}
+              delay={0.5}
             />
           </div>
         </>
