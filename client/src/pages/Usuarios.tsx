@@ -315,7 +315,7 @@ export default function Usuarios() {
                 </span>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                {(u.perfil === 2) && (
+                {(u.perfil.toString() === "Barbeiro") && (
                   <button
                     onClick={() => {
                       setPctTarget(u);
