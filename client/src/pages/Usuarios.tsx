@@ -314,7 +314,7 @@ export default function Usuarios() {
                   {perfilLabels[u.perfil] || u.perfil}
                 </span>
               </div>
-              <div className="flex items-center gap-1 shrink-0">
+              <div className="flex items-center gap-2 shrink-0">
                 {(u.perfil === 2) && (
                   <button
                     onClick={() => {
@@ -322,10 +322,11 @@ export default function Usuarios() {
                       setPctValue("");
                       setPctDialogOpen(true);
                     }}
-                    className="p-1.5 rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-primary/15 text-primary hover:bg-primary/25 transition-colors border border-primary/20 text-xs font-semibold"
                     title="Editar porcentagem"
                   >
-                    <Pencil className="w-4 h-4" />
+                    <Pencil className="w-3.5 h-3.5" />
+                    <span>%</span>
                   </button>
                 )}
                 <button
