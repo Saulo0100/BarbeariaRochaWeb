@@ -22,7 +22,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { TrendingUp, Plus, Loader2, Trash2, DollarSign, Calendar, Scissors, ChevronDown, ChevronUp } from "lucide-react";
+import { TrendingUp, Plus, Loader2, Trash2, DollarSign, Calendar, Scissors, ChevronDown, ChevronUp, Phone } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -327,10 +327,19 @@ export default function Mensalistas() {
                           {m.dia.charAt(0).toUpperCase() + m.dia.slice(1)}
                         </div>
                         <div className="flex items-center gap-2">
+                          <Phone className="w-3 h-3 text-primary" />
+                          {m.numero}
+                        </div>
+                        <div className="flex items-center gap-2">
                           <Scissors className="w-3 h-3 text-primary" />
                           <span className="font-medium text-foreground">
-                            {m.cortesNoMes} corte{m.cortesNoMes !== 1 ? "s" : ""} em {mesAtual}
+                            {m.atendimentosNoMes} atendimento{m.atendimentosNoMes !== 1 ? "s" : ""} em {mesAtual}
                           </span>
+                          {m.cortesNoMes > 0 && (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                              +{m.cortesNoMes} manual{m.cortesNoMes !== 1 ? "is" : ""}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
