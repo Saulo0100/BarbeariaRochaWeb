@@ -9,6 +9,12 @@ import type { AgendamentoDetalheResponse } from "@/lib/types";
 import { statusLabels, statusColors } from "@/lib/types";
 import { Calendar, Scissors, User, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 
@@ -17,13 +23,22 @@ export default function MeusCortes() {
   const [agendamentos, setAgendamentos] = useState<AgendamentoDetalheResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [cancelando, setCancelando] = useState<number | null>(null);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [cancelTarget, setCancelTarget] = useState<AgendamentoDetalheResponse | null>(null);
 
   const fetchAgendamentos = () => {
     setLoading(true);
+    // Try client-specific endpoint first, fallback to generic list
     agendamentoApi
-      .listar(1, 50)
-      .then((r) => setAgendamentos(r.data.items || []))
-      .catch(() => {})
+      .meusAgendamentos()
+      .then((r) => setAgendamentos(Array.isArray(r.data) ? r.data : []))
+      .catch(() => {
+        // Fallback to generic list
+        agendamentoApi
+          .listar(1, 50)
+          .then((r) => setAgendamentos(r.data.items || []))
+          .catch(() => {});
+      })
       .finally(() => setLoading(false));
   };
 
@@ -31,14 +46,26 @@ export default function MeusCortes() {
     fetchAgendamentos();
   }, []);
 
-  const handleCancelar = async (id: number) => {
-    setCancelando(id);
+  const handleCancelar = async () => {
+    if (!cancelTarget) return;
+    setCancelando(cancelTarget.id);
     try {
-      await agendamentoApi.cancelar(id);
+      await agendamentoApi.cancelarComoCliente(cancelTarget.id);
       toast.success("Agendamento cancelado");
+      setCancelDialogOpen(false);
+      setCancelTarget(null);
       fetchAgendamentos();
     } catch (err: any) {
-      toast.error(err.response?.data || "Erro ao cancelar");
+      // Fallback to generic cancel
+      try {
+        await agendamentoApi.cancelar(cancelTarget.id);
+        toast.success("Agendamento cancelado");
+        setCancelDialogOpen(false);
+        setCancelTarget(null);
+        fetchAgendamentos();
+      } catch (err2: any) {
+        toast.error(err2.response?.data || err.response?.data || "Erro ao cancelar");
+      }
     } finally {
       setCancelando(null);
     }
@@ -110,7 +137,10 @@ export default function MeusCortes() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleCancelar(ag.id)}
+                  onClick={() => {
+                    setCancelTarget(ag);
+                    setCancelDialogOpen(true);
+                  }}
                   disabled={cancelando === ag.id}
                   className="mt-3 h-8 text-xs border-destructive/30 text-destructive hover:bg-destructive/10"
                 >
@@ -125,6 +155,38 @@ export default function MeusCortes() {
               )}
             </motion.div>
           ))}
+
+          {/* Cancel Confirmation Dialog */}
+          <Dialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+            <DialogContent className="bg-card border-border max-w-sm">
+              <DialogHeader>
+                <DialogTitle className="font-display">Cancelar Agendamento</DialogTitle>
+              </DialogHeader>
+              {cancelTarget && (
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    Deseja cancelar o agendamento de <strong>{cancelTarget.servico}</strong> com <strong>{cancelTarget.nomeBarbeiro}</strong> em {formatDate(cancelTarget.data)}?
+                  </p>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={handleCancelar}
+                      disabled={cancelando !== null}
+                      className="flex-1 h-10 bg-destructive text-destructive-foreground hover:bg-destructive/90 text-sm"
+                    >
+                      {cancelando !== null ? <Loader2 className="w-4 h-4 animate-spin" /> : "Confirmar Cancelamento"}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setCancelDialogOpen(false)}
+                      className="h-10 text-sm border-border"
+                    >
+                      Voltar
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
         </div>
       ) : (
         <div className="text-center py-12">

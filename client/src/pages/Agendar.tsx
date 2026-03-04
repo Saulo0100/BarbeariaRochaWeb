@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { agendamentoApi, horarioApi, servicoApi, tokenApi, usuarioApi } from "@/lib/api";
-import type { BarbeirosDetalhesResponse, ServicoDetalhesResponse } from "@/lib/types";
+import type { AdicionalDisponivel, BarbeirosDetalhesResponse, ServicoDetalhesResponse } from "@/lib/types";
 import {
   ArrowLeft,
   ArrowRight,
@@ -25,7 +25,7 @@ import {
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 
-const STEPS = ["Barbeiro", "Serviço", "Data", "Dados", "Confirmar"];
+const STEPS = ["Barbeiro", "Serviço", "Adicionais", "Data", "Dados", "Confirmar"];
 
 /** Formata Date como "YYYY-MM-DD" usando horário local (evita bug de fuso com toISOString) */
 const toLocalDateStr = (d: Date) => {
@@ -74,6 +74,11 @@ export default function Agendar() {
   const [codigoConfirmacao, setCodigoConfirmacao] = useState("");
   const [calendarMonth, setCalendarMonth] = useState(new Date());
 
+  // Adicionais state
+  const [querAdicional, setQuerAdicional] = useState<boolean | null>(null);
+  const [adicionaisDisponiveis, setAdicionaisDisponiveis] = useState<AdicionalDisponivel[]>([]);
+  const [adicionaisSelecionados, setAdicionaisSelecionados] = useState<AdicionalDisponivel[]>([]);
+
   // Multi-slot state
   const [horariosEtapa2, setHorariosEtapa2] = useState<string[]>([]);
   const [loadingEtapa2, setLoadingEtapa2] = useState(false);
@@ -84,6 +89,16 @@ export default function Agendar() {
       setBarbeiros(Array.isArray(data) ? data : []);
     }).catch(() => {});
     servicoApi.listar(1, 50).then((r) => setServicos(r.data.items || [])).catch(() => {});
+    agendamentoApi.adicionaisDisponiveis().then((r) => {
+      setAdicionaisDisponiveis(Array.isArray(r.data) ? r.data : []);
+    }).catch(() => {
+      // Fallback: hardcode defaults if endpoint not available
+      setAdicionaisDisponiveis([
+        { nome: "Barba", valor: 15 },
+        { nome: "Sobrancelha", valor: 10 },
+        { nome: "Hidratação", valor: 25 },
+      ]);
+    });
   }, []);
 
   useEffect(() => {
@@ -239,6 +254,7 @@ export default function Agendar() {
         numero: numero.replace(/\D/g, ""),
         nome,
         codigoConfirmacao: parseInt(codigoConfirmacao),
+        adicionais: adicionaisSelecionados.length > 0 ? adicionaisSelecionados.map(a => ({ nome: a.nome, valor: a.valor })) : undefined,
       });
       toast.success("Agendamento realizado com sucesso!");
       setLocation(isAuthenticated ? "/meus-cortes" : "/");
@@ -265,12 +281,13 @@ export default function Agendar() {
   const canGoNext = () => {
     if (step === 0) return !!selectedBarbeiro;
     if (step === 1) return !!selectedServico;
-    if (step === 2) {
+    if (step === 2) return querAdicional !== null;
+    if (step === 3) {
       if (!selectedDate || !selectedTime) return false;
       if (isDuasEtapas && !selectedTimeEtapa2) return false;
       return true;
     }
-    if (step === 3) return !!nome && numero.replace(/\D/g, "").length === 11 && tokenSent && !!codigoConfirmacao;
+    if (step === 4) return !!nome && numero.replace(/\D/g, "").length === 11 && tokenSent && !!codigoConfirmacao;
     return false;
   };
 
@@ -406,8 +423,92 @@ export default function Agendar() {
             </div>
           )}
 
-          {/* Step 2: Data e Hora */}
+          {/* Step 2: Adicionais */}
           {step === 2 && (
+            <div>
+              <h2 className="font-display text-xl font-bold mb-1">Serviços Adicionais</h2>
+              <p className="text-sm text-muted-foreground mb-4">Deseja adicionar serviços adicionais?</p>
+
+              <div className="flex gap-3 mb-4">
+                <button
+                  onClick={() => {
+                    setQuerAdicional(false);
+                    setAdicionaisSelecionados([]);
+                  }}
+                  className={`flex-1 py-3 rounded-lg border text-sm font-medium transition-all ${
+                    querAdicional === false
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border bg-card hover:border-primary/30 text-muted-foreground"
+                  }`}
+                >
+                  Não, obrigado
+                </button>
+                <button
+                  onClick={() => setQuerAdicional(true)}
+                  className={`flex-1 py-3 rounded-lg border text-sm font-medium transition-all ${
+                    querAdicional === true
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border bg-card hover:border-primary/30 text-muted-foreground"
+                  }`}
+                >
+                  Sim, quero!
+                </button>
+              </div>
+
+              {querAdicional && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  className="space-y-2"
+                >
+                  <p className="text-xs text-muted-foreground mb-2">Selecione os adicionais desejados:</p>
+                  {adicionaisDisponiveis.map((ad) => {
+                    const isSelected = adicionaisSelecionados.some(s => s.nome === ad.nome);
+                    return (
+                      <button
+                        key={ad.nome}
+                        onClick={() => {
+                          if (isSelected) {
+                            setAdicionaisSelecionados(prev => prev.filter(s => s.nome !== ad.nome));
+                          } else {
+                            setAdicionaisSelecionados(prev => [...prev, ad]);
+                          }
+                        }}
+                        className={`w-full flex items-center justify-between p-3 rounded-lg border transition-all ${
+                          isSelected
+                            ? "border-primary bg-primary/10"
+                            : "border-border bg-card hover:border-primary/30"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+                            isSelected ? "border-primary bg-primary" : "border-muted-foreground"
+                          }`}>
+                            {isSelected && <Check className="w-3 h-3 text-background" />}
+                          </div>
+                          <span className="text-sm font-medium">{ad.nome}</span>
+                        </div>
+                        <span className="text-sm font-display font-bold text-primary">
+                          + R$ {ad.valor.toFixed(2)}
+                        </span>
+                      </button>
+                    );
+                  })}
+                  {adicionaisSelecionados.length > 0 && (
+                    <div className="mt-3 p-3 bg-primary/5 rounded-lg border border-primary/20">
+                      <p className="text-xs text-muted-foreground">Total adicionais:</p>
+                      <p className="text-sm font-display font-bold text-primary">
+                        R$ {adicionaisSelecionados.reduce((sum, a) => sum + a.valor, 0).toFixed(2)}
+                      </p>
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </div>
+          )}
+
+          {/* Step 3: Data e Hora */}
+          {step === 3 && (
             <div>
               <h2 className="font-display text-xl font-bold mb-1">Data e Horário</h2>
               <p className="text-sm text-muted-foreground mb-4">Quando deseja ser atendido?</p>
@@ -590,8 +691,8 @@ export default function Agendar() {
             </div>
           )}
 
-          {/* Step 3: Dados pessoais + Token */}
-          {step === 3 && (
+          {/* Step 4: Dados pessoais + Token */}
+          {step === 4 && (
             <div>
               <h2 className="font-display text-xl font-bold mb-1">Seus Dados</h2>
               <p className="text-sm text-muted-foreground mb-4">
@@ -652,8 +753,8 @@ export default function Agendar() {
             </div>
           )}
 
-          {/* Step 4: Resumo */}
-          {step === 4 && (
+          {/* Step 5: Resumo */}
+          {step === 5 && (
             <div>
               <h2 className="font-display text-xl font-bold mb-1">Confirmar Agendamento</h2>
               <p className="text-sm text-muted-foreground mb-4">Revise os dados antes de confirmar</p>
@@ -672,6 +773,17 @@ export default function Agendar() {
                     <p className="text-xs text-muted-foreground">Serviço</p>
                     <p className="font-semibold text-sm">{selectedServico?.nome}</p>
                     <p className="text-xs text-primary">R$ {selectedServico?.valor.toFixed(2)}</p>
+                    {adicionaisSelecionados.length > 0 && (
+                      <div className="mt-1">
+                        <p className="text-xs text-muted-foreground">Adicionais:</p>
+                        {adicionaisSelecionados.map(a => (
+                          <p key={a.nome} className="text-xs text-primary">+ {a.nome} (R$ {a.valor.toFixed(2)})</p>
+                        ))}
+                        <p className="text-xs font-semibold text-primary mt-0.5">
+                          Total: R$ {((selectedServico?.valor || 0) + adicionaisSelecionados.reduce((s, a) => s + a.valor, 0)).toFixed(2)}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="p-4 flex items-center gap-3">
@@ -731,7 +843,7 @@ export default function Agendar() {
       </AnimatePresence>
 
       {/* Navigation Buttons */}
-      {step < 4 && (
+      {step < 5 && (
         <div className="mt-6">
           <Button
             onClick={() => setStep(step + 1)}

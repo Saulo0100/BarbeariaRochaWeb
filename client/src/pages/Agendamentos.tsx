@@ -8,6 +8,12 @@ import type { AgendamentoDetalheResponse, AgendamentoFiltroRequest, BarbeirosDet
 import { statusLabels, statusColors } from "@/lib/types";
 import { useAuth } from "@/contexts/AuthContext";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -26,7 +32,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Filter,
+  X,
 } from "lucide-react";
+import { toast } from "sonner";
 import { motion } from "framer-motion";
 
 export default function Agendamentos() {
@@ -80,6 +88,29 @@ export default function Agendamentos() {
       }).catch(() => {});
     }
   }, [isAdmin]);
+
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [cancelTarget, setCancelTarget] = useState<AgendamentoDetalheResponse | null>(null);
+  const [canceling, setCanceling] = useState(false);
+
+  const canCancelStatus = (status: string) =>
+    ["Pendente", "Confirmado", "LembreteEnviado", "VouAtrasar"].includes(status);
+
+  const handleCancelar = async () => {
+    if (!cancelTarget) return;
+    setCanceling(true);
+    try {
+      await agendamentoApi.cancelar(cancelTarget.id);
+      toast.success("Agendamento cancelado com sucesso");
+      setCancelDialogOpen(false);
+      setCancelTarget(null);
+      fetchAgendamentos();
+    } catch (err: any) {
+      toast.error(err.response?.data || "Erro ao cancelar agendamento");
+    } finally {
+      setCanceling(false);
+    }
+  };
 
   const totalPaginas = Math.ceil(totalRegistros / itensPorPagina);
 
@@ -244,8 +275,55 @@ export default function Agendamentos() {
                   </div>
                 )}
               </div>
+
+              {/* Cancel button for barber/admin */}
+              {canCancelStatus(ag.status) && !ag.agendamentoPrincipalId && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setCancelTarget(ag);
+                    setCancelDialogOpen(true);
+                  }}
+                  className="mt-3 h-8 text-xs border-destructive/30 text-destructive hover:bg-destructive/10"
+                >
+                  <X className="w-3 h-3 mr-1" /> Cancelar
+                </Button>
+              )}
             </motion.div>
           ))}
+
+          {/* Cancel Confirmation Dialog */}
+          <Dialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+            <DialogContent className="bg-card border-border max-w-sm">
+              <DialogHeader>
+                <DialogTitle className="font-display">Cancelar Agendamento</DialogTitle>
+              </DialogHeader>
+              {cancelTarget && (
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    Deseja cancelar o agendamento de <strong>{cancelTarget.nomeCliente}</strong> ({cancelTarget.servico}) agendado para {formatDate(cancelTarget.data)}?
+                  </p>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={handleCancelar}
+                      disabled={canceling}
+                      className="flex-1 h-10 bg-destructive text-destructive-foreground hover:bg-destructive/90 text-sm"
+                    >
+                      {canceling ? <Loader2 className="w-4 h-4 animate-spin" /> : "Confirmar Cancelamento"}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setCancelDialogOpen(false)}
+                      className="h-10 text-sm border-border"
+                    >
+                      Voltar
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
 
           {/* Pagination */}
           {totalPaginas > 1 && (

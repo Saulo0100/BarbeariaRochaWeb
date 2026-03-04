@@ -78,6 +78,22 @@ export interface BarbeirosDetalhesResponse {
   foto?: string | null;
 }
 
+export interface AdicionalResponse {
+  id: number;
+  nome: string;
+  valor: number;
+}
+
+export interface AdicionalRequest {
+  nome: string;
+  valor: number;
+}
+
+export interface AdicionalDisponivel {
+  nome: string;
+  valor: number;
+}
+
 export interface AgendamentoDetalheResponse {
   id: number;
   nomeCliente: string;
@@ -88,6 +104,7 @@ export interface AgendamentoDetalheResponse {
   servico: string;
   descricaoEtapa?: string | null;
   agendamentoPrincipalId?: number | null;
+  adicionais?: AdicionalResponse[] | null;
 }
 
 export interface HorariosOcupadosResponse {
@@ -162,6 +179,7 @@ export interface AgendamentoCriarRequest {
   numero: string;
   nome: string;
   codigoConfirmacao: number;
+  adicionais?: AdicionalRequest[];
 }
 
 export interface AgendamentoCompletarRequest {
@@ -171,6 +189,7 @@ export interface AgendamentoCompletarRequest {
 export interface AgendamentoEditarRequest {
   metodoPagamento: MetodoPagamento;
   servicoId: number;
+  adicionais?: AdicionalRequest[];
 }
 
 export interface HorarioRequest {
@@ -186,6 +205,7 @@ export interface UsuarioCriarRequest {
   agenda?: TipoAgenda;
   descricao: string;
   senha: string;
+  porcentagem?: number;
 }
 
 export interface UsuarioEditarRequest {
@@ -233,6 +253,7 @@ export interface AgendamentoCriarParaClienteRequest {
   numero: string;
   nome: string;
   dtAgendamentoEtapa2?: string;
+  adicionais?: AdicionalRequest[];
 }
 
 export interface AgendamentoCancelarPorNumeroRequest {
@@ -299,6 +320,10 @@ export interface RelatorioBarbeiroResponse {
   cancelamentosTotal: number;
   clientesFaltaram: number;
   taxaConclusao: number;
+  porcentagemAdmin?: number | null;
+  faturamentoBruto?: number | null;
+  faturamentoLiquido?: number | null;
+  valorComissaoAdmin?: number | null;
 }
 
 export interface RelatorioFiltroRequest {
