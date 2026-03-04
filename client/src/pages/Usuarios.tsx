@@ -3,6 +3,7 @@
  */
 import { useEffect, useState, useCallback } from "react";
 import { usuarioApi } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
 import type { UsuarioListarResponse, UsuarioCriarRequest } from "@/lib/types";
 import { Perfil, TipoAgenda } from "@/lib/types";
 import { Input } from "@/components/ui/input";
@@ -51,6 +52,8 @@ const perfilColors: Record<number, string> = {
 };
 
 export default function Usuarios() {
+  const { isPerfil } = useAuth();
+  const isBarbeiroAdmin = isPerfil("barbeiroadministrador");
   const [usuarios, setUsuarios] = useState<UsuarioListarResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [pagina, setPagina] = useState(1);
@@ -211,8 +214,8 @@ export default function Usuarios() {
                   <SelectContent>
                     <SelectItem value="1">Cliente</SelectItem>
                     <SelectItem value="2">Barbeiro</SelectItem>
-                    <SelectItem value="3">Administrador</SelectItem>
-                    <SelectItem value="4">Barbeiro Administrador</SelectItem>
+                    {!isBarbeiroAdmin && <SelectItem value="3">Administrador</SelectItem>}
+                    {!isBarbeiroAdmin && <SelectItem value="4">Barbeiro Administrador</SelectItem>}
                   </SelectContent>
                 </Select>
               </div>
@@ -293,9 +296,17 @@ export default function Usuarios() {
               transition={{ delay: i * 0.04 }}
               className="bg-card border border-border rounded-lg p-3 flex items-center gap-3"
             >
-              <div className="w-10 h-10 rounded-full gold-gradient flex items-center justify-center text-background font-display font-bold shrink-0">
-                {u.nome.charAt(0)}
-              </div>
+              {u.foto ? (
+                <img
+                  src={`data:image/jpeg;base64,${u.foto}`}
+                  alt={u.nome}
+                  className="w-10 h-10 rounded-full object-cover shrink-0 border border-primary/30"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full gold-gradient flex items-center justify-center text-background font-display font-bold shrink-0">
+                  {u.nome.charAt(0)}
+                </div>
+              )}
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">{u.nome}</p>
                 <p className="text-xs text-muted-foreground">{u.email}</p>
@@ -311,7 +322,7 @@ export default function Usuarios() {
                       setPctValue("");
                       setPctDialogOpen(true);
                     }}
-                    className="p-2 text-muted-foreground hover:text-primary transition-colors"
+                    className="p-1.5 rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
                     title="Editar porcentagem"
                   >
                     <Pencil className="w-4 h-4" />

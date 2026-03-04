@@ -26,6 +26,7 @@ import Relatorios from "./pages/Relatorios";
 import ConfirmarEmail from "./pages/ConfirmarEmail";
 import AgendarParaCliente from "./pages/AgendarParaCliente";
 import CancelarAgendamento from "./pages/CancelarAgendamento";
+import VerProximoAgendamento from "./pages/VerProximoAgendamento";
 
 function Router() {
   return (
@@ -38,6 +39,7 @@ function Router() {
         <Route path="/confirmar-email" component={ConfirmarEmail} />
         <Route path="/agendar" component={Agendar} />
         <Route path="/cancelar-agendamento" component={CancelarAgendamento} />
+        <Route path="/proximo-agendamento" component={VerProximoAgendamento} />
         <Route path="/servicos" component={Servicos} />
         {/* Cliente */}
         <Route path="/meus-cortes" component={MeusCortes} />

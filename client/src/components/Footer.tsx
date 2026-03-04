@@ -46,7 +46,7 @@ export default function Footer() {
             </div>
           </a>
           <a
-            href="https://www.google.com/maps/search/?api=1&query=R.+La%C3%A9rte+Fenelon,+830+-+Ip%C3%AA,+S%C3%A3o+Jos%C3%A9+dos+Pinhais+-+PR,+83055-050"
+            href="https://www.google.com/maps/search/?api=1&query=R.+La%C3%A9rte+Fenelon,+670+-+Ip%C3%AA,+S%C3%A3o+Jos%C3%A9+dos+Pinhais+-+PR,+83055-050"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-start gap-3 p-2 -m-2 rounded-lg hover:bg-primary/10 transition-colors group cursor-pointer"
@@ -57,7 +57,7 @@ export default function Footer() {
                 Localização
                 <ExternalLink className="w-3 h-3 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
               </p>
-              <p className="text-xs">R. Laérte Fenelon, 830 - Ipê</p>
+              <p className="text-xs">R. Laérte Fenelon, 670 - Ipê</p>
               <p className="text-xs">São José dos Pinhais - PR, 83055-050</p>
               <p className="text-[10px] text-muted-foreground mt-0.5">Toque para abrir no Google Maps</p>
             </div>

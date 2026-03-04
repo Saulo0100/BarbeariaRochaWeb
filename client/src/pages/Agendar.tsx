@@ -496,9 +496,10 @@ export default function Agendar() {
                   })}
                   {adicionaisSelecionados.length > 0 && (
                     <div className="mt-3 p-3 bg-primary/5 rounded-lg border border-primary/20">
-                      <p className="text-xs text-muted-foreground">Total adicionais:</p>
-                      <p className="text-sm font-display font-bold text-primary">
-                        R$ {adicionaisSelecionados.reduce((sum, a) => sum + a.valor, 0).toFixed(2)}
+                      <p className="text-xs text-muted-foreground">Serviço: R$ {selectedServico?.valor.toFixed(2)}</p>
+                      <p className="text-xs text-muted-foreground">Adicionais: R$ {adicionaisSelecionados.reduce((sum, a) => sum + a.valor, 0).toFixed(2)}</p>
+                      <p className="text-sm font-display font-bold text-primary mt-1">
+                        Total: R$ {((selectedServico?.valor || 0) + adicionaisSelecionados.reduce((sum, a) => sum + a.valor, 0)).toFixed(2)}
                       </p>
                     </div>
                   )}
