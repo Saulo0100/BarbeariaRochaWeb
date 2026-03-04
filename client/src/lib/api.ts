@@ -127,10 +127,10 @@ export const usuarioApi = {
   listar: (pagina = 1, itensPorPagina = 10, filtro?: UsuarioFiltroRequest) =>
     api.get<PaginacaoResultado<UsuarioListarResponse>>("/api/Usuario", {
       params: {
-        Pagina: pagina,
-        ItensPorPagina: itensPorPagina,
-        "Filtro.Nome": filtro?.nome || undefined,
-        "Filtro.Perfil": filtro?.perfil || undefined,
+        pagina,
+        itensPorPagina,
+        nome: filtro?.nome || undefined,
+        perfil: filtro?.perfil || undefined,
       },
     }),
 
