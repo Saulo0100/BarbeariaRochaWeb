@@ -120,16 +120,17 @@ export default function Perfil() {
               onClick={async () => {
                 setSavingFoto(true);
                 try {
-                  const reader = new FileReader();
-                  reader.onloadend = async () => {
-                    const base64 = (reader.result as string).split(",")[1];
-                    await usuarioApi.editar(user.id, { id: user.id, foto: base64 });
-                    await refreshUser();
-                    setFotoFile(null);
-                    setFotoPreview(null);
-                    toast.success("Foto atualizada!");
-                  };
-                  reader.readAsDataURL(fotoFile);
+                  const base64 = await new Promise<string>((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve((reader.result as string).split(",")[1]);
+                    reader.onerror = () => reject(new Error("Erro ao ler arquivo"));
+                    reader.readAsDataURL(fotoFile);
+                  });
+                  await usuarioApi.editar(user.id, { id: user.id, foto: base64 });
+                  await refreshUser();
+                  setFotoFile(null);
+                  setFotoPreview(null);
+                  toast.success("Foto atualizada!");
                 } catch (err: any) {
                   toast.error(err.response?.data || "Erro ao atualizar foto");
                 } finally {
