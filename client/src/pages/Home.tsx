@@ -11,8 +11,7 @@ import { servicoApi, usuarioApi } from "@/lib/api";
 import type { ServicoDetalhesResponse, BarbeirosDetalhesResponse } from "@/lib/types";
 import { useAuth } from "@/contexts/AuthContext";
 
-const HERO_IMG = "https://d2xsxph8kpxj0f.cloudfront.net/310519663043062505/CjBWWVpcRtjqZnbfjVbFp8/hero-barber-jFG7MXqmkn5oqxDjr2BCDy.webp";
-const TOOLS_IMG = "https://d2xsxph8kpxj0f.cloudfront.net/310519663043062505/CjBWWVpcRtjqZnbfjVbFp8/barber-tools-egZMLV4xZqTxnUdNH5xcDH.webp";
+const LOGO_IMG = "/logo-rocha.png";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -49,12 +48,11 @@ export default function Home() {
   return (
     <div className="space-y-0">
       {/* Hero Section */}
-      <section className="relative h-[70vh] min-h-[480px] overflow-hidden">
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${HERO_IMG})` }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/30" />
+      <section className="relative h-[70vh] min-h-[480px] overflow-hidden bg-background">
+        <div className="absolute inset-0 flex items-center justify-center opacity-30">
+          <img src={LOGO_IMG} alt="Barbearia Rocha" className="w-full h-full object-contain" />
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/20" />
 
         <div className="relative h-full container flex flex-col justify-end pb-10">
           <motion.div
@@ -177,10 +175,9 @@ export default function Home() {
 
       {/* About / CTA Section */}
       <section className="relative overflow-hidden">
-        <div
-          className="absolute inset-0 bg-cover bg-center opacity-20"
-          style={{ backgroundImage: `url(${TOOLS_IMG})` }}
-        />
+        <div className="absolute inset-0 flex items-center justify-center opacity-10">
+          <img src={LOGO_IMG} alt="" className="w-full h-full object-contain" />
+        </div>
         <div className="relative container py-12 text-center">
           <h2 className="font-display text-2xl font-bold mb-3">
             Agende Agora

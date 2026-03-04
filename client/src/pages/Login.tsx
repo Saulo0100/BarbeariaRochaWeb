@@ -9,12 +9,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
-import { Scissors, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { authApi } from "@/lib/api";
 
-const BARBER_IMG = "https://d2xsxph8kpxj0f.cloudfront.net/310519663043062505/CjBWWVpcRtjqZnbfjVbFp8/barber-working-bhjza6974utTauMXdMNGQe.webp";
+const LOGO_IMG = "/logo-rocha.png";
 
 export default function Login() {
   const { login } = useAuth();
@@ -73,15 +73,12 @@ export default function Login() {
     <div className="min-h-[calc(100vh-7.5rem)]">
       {/* Top image accent */}
       <div className="relative h-40 overflow-hidden">
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${BARBER_IMG})` }}
-        />
+        <div className="absolute inset-0 flex items-center justify-center opacity-20">
+          <img src={LOGO_IMG} alt="" className="w-full h-full object-contain" />
+        </div>
         <div className="absolute inset-0 bg-gradient-to-b from-background/40 to-background" />
         <div className="absolute bottom-4 left-0 right-0 flex justify-center">
-          <div className="w-16 h-16 rounded-full gold-gradient flex items-center justify-center vintage-shadow">
-            <Scissors className="w-7 h-7 text-background" />
-          </div>
+          <img src={LOGO_IMG} alt="Barbearia Rocha" className="w-16 h-16 rounded-full object-contain vintage-shadow" />
         </div>
       </div>
 

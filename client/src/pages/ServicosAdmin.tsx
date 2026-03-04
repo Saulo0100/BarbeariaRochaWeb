@@ -156,7 +156,7 @@ export default function ServicosAdmin() {
         </div>
       ) : servicos.length > 0 ? (
         <div className="space-y-3">
-          {servicos.map((s, i) => (
+          {[...servicos].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR")).map((s, i) => (
             <motion.div
               key={s.id}
               initial={{ opacity: 0, y: 8 }}

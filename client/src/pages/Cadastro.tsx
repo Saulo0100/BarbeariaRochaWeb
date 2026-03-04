@@ -9,15 +9,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { usuarioApi } from "@/lib/api";
 import { Perfil } from "@/lib/types";
-import { Scissors, Eye, EyeOff, Loader2, ArrowLeft } from "lucide-react";
+import { Eye, EyeOff, Loader2, ArrowLeft, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
+
+const LOGO_IMG = "/logo-rocha.png";
 
 export default function Cadastro() {
   const [, setLocation] = useLocation();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [sucesso, setSucesso] = useState(false);
   const [form, setForm] = useState({
     nome: "",
     numero: "",
@@ -62,8 +65,7 @@ export default function Cadastro() {
         descricao: "",
         senha: form.senha,
       });
-      toast.success("Conta criada com sucesso! Faça login para continuar.");
-      setLocation("/login");
+      setSucesso(true);
     } catch (err: any) {
       toast.error(err.response?.data || "Erro ao criar conta");
     } finally {
@@ -84,11 +86,30 @@ export default function Cadastro() {
         </Link>
 
         <div className="flex justify-center mb-4">
-          <div className="w-14 h-14 rounded-full gold-gradient flex items-center justify-center">
-            <Scissors className="w-6 h-6 text-background" />
-          </div>
+          <img src={LOGO_IMG} alt="Barbearia Rocha" className="w-14 h-14 rounded-full object-contain" />
         </div>
 
+        {sucesso ? (
+          <div className="text-center space-y-4">
+            <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
+              <Mail className="w-8 h-8 text-primary" />
+            </div>
+            <h1 className="font-display text-2xl font-bold">Verifique seu Email</h1>
+            <p className="text-muted-foreground text-sm">
+              Enviamos um link de confirmação para <strong className="text-foreground">{form.email}</strong>. Clique no link para ativar sua conta.
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Não recebeu? Verifique a pasta de spam.
+            </p>
+            <Button
+              onClick={() => setLocation("/login")}
+              className="w-full h-12 gold-gradient text-background font-semibold"
+            >
+              Ir para Login
+            </Button>
+          </div>
+        ) : (
+          <>
         <h1 className="font-display text-2xl font-bold text-center mb-1">Criar Conta</h1>
         <p className="text-muted-foreground text-sm text-center mb-6">
           Cadastre-se para agendar seus cortes
@@ -171,6 +192,8 @@ export default function Cadastro() {
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Criar Conta"}
           </Button>
         </form>
+          </>
+        )}
       </motion.div>
     </div>
   );

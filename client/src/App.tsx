@@ -24,6 +24,7 @@ import ServicosAdmin from "./pages/ServicosAdmin";
 import Excecoes from "./pages/Excecoes";
 import Mensalistas from "./pages/Mensalistas";
 import Relatorios from "./pages/Relatorios";
+import ConfirmarEmail from "./pages/ConfirmarEmail";
 
 function Router() {
   return (
@@ -33,6 +34,7 @@ function Router() {
         <Route path="/" component={Home} />
         <Route path="/login" component={Login} />
         <Route path="/cadastro" component={Cadastro} />
+        <Route path="/confirmar-email" component={ConfirmarEmail} />
         <Route path="/agendar" component={Agendar} />
         <Route path="/servicos" component={Servicos} />
         <Route path="/configuracoes" component={Configuracoes} />
