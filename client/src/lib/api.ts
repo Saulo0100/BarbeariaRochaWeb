@@ -1,6 +1,7 @@
 import axios from "axios";
 import type {
   AgendamentoCriarRequest,
+  AgendamentoCriarParaClienteRequest,
   AgendamentoCompletarRequest,
   AgendamentoEditarRequest,
   AgendamentoDetalheResponse,
@@ -18,6 +19,8 @@ import type {
   LoginRequest,
   EsqueceuSenhaRequest,
   MensalistaCriarRequest,
+  MensalistaCorteResponse,
+  MensalistaRegistrarCorteRequest,
   MensalistaResponse,
   PaginacaoResultado,
   RelatorioBarbeiroResponse,
@@ -151,6 +154,9 @@ export const agendamentoApi = {
   criar: (data: AgendamentoCriarRequest) =>
     api.post("/api/agendamento", data),
 
+  criarParaCliente: (data: AgendamentoCriarParaClienteRequest) =>
+    api.post("/api/agendamento/CriarParaCliente", data),
+
   obterPorId: (id: number) =>
     api.get<AgendamentoDetalheResponse>(`/api/agendamento/${id}`),
 
@@ -238,6 +244,17 @@ export const mensalistaApi = {
 
   listar: () =>
     api.get<MensalistaResponse[]>("/api/Mensalista"),
+
+  registrarCorte: (data: MensalistaRegistrarCorteRequest) =>
+    api.post("/api/Mensalista/corte", data),
+
+  listarCortes: (mensalistaId: number, mes?: number, ano?: number) =>
+    api.get<MensalistaCorteResponse[]>(`/api/Mensalista/${mensalistaId}/cortes`, {
+      params: { mes, ano },
+    }),
+
+  deletarCorte: (corteId: number) =>
+    api.delete(`/api/Mensalista/corte/${corteId}`),
 };
 
 // ===== RELATÓRIO =====

@@ -25,6 +25,7 @@ import Excecoes from "./pages/Excecoes";
 import Mensalistas from "./pages/Mensalistas";
 import Relatorios from "./pages/Relatorios";
 import ConfirmarEmail from "./pages/ConfirmarEmail";
+import AgendarParaCliente from "./pages/AgendarParaCliente";
 
 function Router() {
   return (
@@ -48,6 +49,7 @@ function Router() {
 
         {/* Barbeiro + Admin */}
         <Route path="/agendamentos" component={Agendamentos} />
+        <Route path="/agendar-cliente" component={AgendarParaCliente} />
         <Route path="/excecoes" component={Excecoes} />
 
         {/* Barbeiro + Admin */}
