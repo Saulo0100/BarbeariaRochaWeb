@@ -19,6 +19,8 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -45,6 +47,8 @@ export default function Excecoes() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [deleting, setDeleting] = useState<number | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
   const [pagina, setPagina] = useState(1);
   const [totalRegistros, setTotalRegistros] = useState(0);
 
@@ -106,12 +110,14 @@ export default function Excecoes() {
     }
   };
 
-  const handleDeletar = async (id: number) => {
-    if (!confirm("Deseja excluir esta exceção?")) return;
-    setDeleting(id);
+  const handleDeletar = async () => {
+    if (deleteTargetId == null) return;
+    setDeleting(deleteTargetId);
     try {
-      await excecaoApi.deletar(id);
+      await excecaoApi.deletar(deleteTargetId);
       toast.success("Exceção excluída");
+      setDeleteDialogOpen(false);
+      setDeleteTargetId(null);
       fetchExcecoes();
     } catch (err: any) {
       toast.error(err.response?.data || "Erro ao excluir");
@@ -191,6 +197,34 @@ export default function Excecoes() {
         </Dialog>
       </div>
 
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="bg-card border-border max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="font-display">Excluir Exceção</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Tem certeza que deseja excluir esta exceção? Esta ação não pode ser desfeita.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+              className="h-10 text-sm border-border"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleDeletar}
+              disabled={deleting !== null}
+              className="h-10 text-sm bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+            >
+              {deleting !== null ? <Loader2 className="w-4 h-4 animate-spin" /> : "Excluir"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {loading ? (
         <div className="flex justify-center py-12">
           <Loader2 className="w-6 h-6 animate-spin text-primary" />
@@ -216,7 +250,10 @@ export default function Excecoes() {
                 )}
               </div>
               <button
-                onClick={() => handleDeletar(exc.id)}
+                onClick={() => {
+                  setDeleteTargetId(exc.id);
+                  setDeleteDialogOpen(true);
+                }}
                 disabled={deleting === exc.id}
                 className="p-1.5 text-muted-foreground hover:text-destructive transition-colors shrink-0"
               >

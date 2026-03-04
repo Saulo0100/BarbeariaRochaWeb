@@ -334,9 +334,17 @@ export default function Agendar() {
                         : "border-border bg-card hover:border-primary/30"
                     }`}
                   >
-                    <div className="w-12 h-12 rounded-full gold-gradient flex items-center justify-center text-background font-display font-bold text-lg shrink-0">
-                      {b.nome.charAt(0)}
-                    </div>
+                    {b.foto ? (
+                      <img
+                        src={`data:image/jpeg;base64,${b.foto}`}
+                        alt={b.nome}
+                        className="w-12 h-12 rounded-full object-cover shrink-0 border border-primary/30"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-full gold-gradient flex items-center justify-center text-background font-display font-bold text-lg shrink-0">
+                        {b.nome.charAt(0)}
+                      </div>
+                    )}
                     <div className="text-left flex-1">
                       <p className="font-semibold text-sm">{b.nome}</p>
                       {b.descricao && <p className="text-xs text-muted-foreground">{b.descricao}</p>}

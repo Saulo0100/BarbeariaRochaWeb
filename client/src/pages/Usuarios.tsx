@@ -94,7 +94,7 @@ export default function Usuarios() {
     }
     setCreating(true);
     try {
-      await usuarioApi.criar(form);
+      await usuarioApi.criarComoAdmin(form);
       toast.success("Usuário criado com sucesso!");
       setDialogOpen(false);
       setForm({ nome: "", numero: "", email: "", perfil: Perfil.Cliente, descricao: "", senha: "" });

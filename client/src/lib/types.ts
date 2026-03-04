@@ -75,6 +75,7 @@ export interface BarbeirosDetalhesResponse {
   nome: string;
   descricao?: string | null;
   agenda: string;
+  foto?: string | null;
 }
 
 export interface AgendamentoDetalheResponse {
@@ -194,6 +195,7 @@ export interface UsuarioEditarRequest {
   numero?: string;
   descricao?: string;
   agenda?: TipoAgenda;
+  foto?: string;
 }
 
 export interface ServicoCriarRequest {
@@ -231,6 +233,12 @@ export interface AgendamentoCriarParaClienteRequest {
   numero: string;
   nome: string;
   dtAgendamentoEtapa2?: string;
+}
+
+export interface AgendamentoCancelarPorNumeroRequest {
+  agendamentoId: number;
+  numero: string;
+  codigoConfirmacao: number;
 }
 
 // ===== RELATORIO RESPONSE MODELS =====

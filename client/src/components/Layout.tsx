@@ -11,15 +11,15 @@ import {
   Calendar,
   Scissors,
   User,
-  Settings,
   Users,
   LogOut,
   ClipboardList,
   CalendarCheck,
   BarChart3,
   Menu,
-  X,
+  X as XIcon,
   UserPlus,
+  Ban,
 } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -38,6 +38,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       return [
         { path: "/", icon: Home, label: "Início" },
         { path: "/agendar", icon: Calendar, label: "Agendar" },
+        { path: "/cancelar-agendamento", icon: Ban, label: "Cancelar" },
         { path: "/servicos", icon: Scissors, label: "Serviços" },
         { path: "/login", icon: User, label: "Entrar" },
       ];
@@ -101,7 +102,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               onClick={() => setMenuOpen(!menuOpen)}
               className="p-2 text-muted-foreground hover:text-primary transition-colors"
             >
-              {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {menuOpen ? <XIcon className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           )}
         </div>
@@ -187,15 +188,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     </Link>
                   </>
                 )}
-
-                <Link
-                  href="/configuracoes"
-                  onClick={() => setMenuOpen(false)}
-                  className="flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
-                >
-                  <Settings className="w-4 h-4" />
-                  Configurações
-                </Link>
 
                 <button
                   onClick={() => {
