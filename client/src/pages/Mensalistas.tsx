@@ -18,6 +18,8 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -32,6 +34,8 @@ export default function Mensalistas() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [canceling, setCanceling] = useState<number | null>(null);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [cancelTargetId, setCancelTargetId] = useState<number | null>(null);
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [corteDialogOpen, setCorteDialogOpen] = useState(false);
   const [corteTarget, setCorteTarget] = useState<MensalistaResponse | null>(null);
@@ -89,12 +93,14 @@ export default function Mensalistas() {
     }
   };
 
-  const handleCancelar = async (id: number) => {
-    if (!confirm("Deseja cancelar este mensalista?")) return;
-    setCanceling(id);
+  const handleCancelar = async () => {
+    if (cancelTargetId == null) return;
+    setCanceling(cancelTargetId);
     try {
-      await mensalistaApi.cancelar(id);
+      await mensalistaApi.cancelar(cancelTargetId);
       toast.success("Mensalista cancelado");
+      setCancelDialogOpen(false);
+      setCancelTargetId(null);
       fetchMensalistas();
     } catch (err: any) {
       toast.error(err.response?.data || "Erro ao cancelar");
@@ -256,6 +262,34 @@ export default function Mensalistas() {
         </Dialog>
       </div>
 
+      {/* Cancel Mensalista Confirmation Dialog */}
+      <Dialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+        <DialogContent className="bg-card border-border max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="font-display">Cancelar Mensalista</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Tem certeza que deseja cancelar este mensalista? Esta ação não pode ser desfeita.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setCancelDialogOpen(false)}
+              className="h-10 text-sm border-border"
+            >
+              Voltar
+            </Button>
+            <Button
+              onClick={handleCancelar}
+              disabled={canceling !== null}
+              className="h-10 text-sm bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+            >
+              {canceling !== null ? <Loader2 className="w-4 h-4 animate-spin" /> : "Cancelar Mensalista"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Registrar Corte Dialog */}
       <Dialog open={corteDialogOpen} onOpenChange={setCorteDialogOpen}>
         <DialogContent className="bg-card border-border max-w-sm">
@@ -365,7 +399,10 @@ export default function Mensalistas() {
                       )}
                       {m.status === "Ativo" && (
                         <button
-                          onClick={() => handleCancelar(m.id)}
+                          onClick={() => {
+                            setCancelTargetId(m.id);
+                            setCancelDialogOpen(true);
+                          }}
                           disabled={canceling === m.id}
                           className="p-1.5 text-muted-foreground hover:text-destructive transition-colors shrink-0"
                         >

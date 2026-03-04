@@ -3,11 +3,19 @@
  */
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { usuarioApi } from "@/lib/api";
+import { usuarioApi, authApi } from "@/lib/api";
+import { TipoAgenda } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { User, Edit3, Save, Loader2, Mail, Phone, FileText } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { User, Edit3, Save, Loader2, Mail, Phone, FileText, Calendar, Camera, Key } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 
@@ -20,20 +28,32 @@ export default function Perfil() {
     email: user?.email || "",
     numero: user?.numero || "",
     descricao: user?.descricao || "",
+    agenda: user?.agenda || "",
   });
+  const [novaSenha, setNovaSenha] = useState("");
+  const [savingSenha, setSavingSenha] = useState(false);
+  const [fotoFile, setFotoFile] = useState<File | null>(null);
+  const [fotoPreview, setFotoPreview] = useState<string | null>(null);
+  const [savingFoto, setSavingFoto] = useState(false);
+
+  const isBarbeiro = user?.perfil?.toLowerCase() === "barbeiro" || user?.perfil?.toLowerCase() === "barbeiroadministrador";
 
   if (!user) return null;
 
   const handleSave = async () => {
     setLoading(true);
     try {
-      await usuarioApi.editar(user.id, {
+      const editData: any = {
         id: user.id,
         nome: form.nome,
         email: form.email,
         numero: form.numero,
         descricao: form.descricao,
-      });
+      };
+      if (isBarbeiro && form.agenda) {
+        editData.agenda = parseInt(form.agenda) as TipoAgenda;
+      }
+      await usuarioApi.editar(user.id, editData);
       await refreshUser();
       setEditing(false);
       toast.success("Perfil atualizado!");
@@ -50,12 +70,80 @@ export default function Perfil() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        {/* Avatar */}
+        {/* Avatar + Foto */}
         <div className="flex flex-col items-center mb-6">
-          <div className="w-20 h-20 rounded-full gold-gradient flex items-center justify-center text-background font-display font-bold text-3xl mb-3">
-            {user.nome.charAt(0)}
+          <div className="relative group">
+            {user.foto ? (
+              <img
+                src={`data:image/jpeg;base64,${user.foto}`}
+                alt={user.nome}
+                className="w-20 h-20 rounded-full object-cover border-2 border-primary mb-3"
+              />
+            ) : fotoPreview ? (
+              <img
+                src={fotoPreview}
+                alt="Preview"
+                className="w-20 h-20 rounded-full object-cover border-2 border-primary mb-3"
+              />
+            ) : (
+              <div className="w-20 h-20 rounded-full gold-gradient flex items-center justify-center text-background font-display font-bold text-3xl mb-3">
+                {user.nome.charAt(0)}
+              </div>
+            )}
+            <label
+              htmlFor="foto-upload"
+              className="absolute bottom-2 right-0 w-7 h-7 rounded-full bg-primary flex items-center justify-center cursor-pointer hover:bg-primary/80 transition-colors shadow-md"
+            >
+              <Camera className="w-3.5 h-3.5 text-background" />
+            </label>
+            <input
+              id="foto-upload"
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                if (file.size > 2 * 1024 * 1024) {
+                  toast.error("A imagem deve ter no máximo 2MB");
+                  return;
+                }
+                setFotoFile(file);
+                const reader = new FileReader();
+                reader.onloadend = () => setFotoPreview(reader.result as string);
+                reader.readAsDataURL(file);
+              }}
+            />
           </div>
-          <h1 className="font-display text-xl font-bold">{user.nome}</h1>
+          {fotoFile && (
+            <Button
+              onClick={async () => {
+                setSavingFoto(true);
+                try {
+                  const reader = new FileReader();
+                  reader.onloadend = async () => {
+                    const base64 = (reader.result as string).split(",")[1];
+                    await usuarioApi.editar(user.id, { id: user.id, foto: base64 });
+                    await refreshUser();
+                    setFotoFile(null);
+                    setFotoPreview(null);
+                    toast.success("Foto atualizada!");
+                  };
+                  reader.readAsDataURL(fotoFile);
+                } catch (err: any) {
+                  toast.error(err.response?.data || "Erro ao atualizar foto");
+                } finally {
+                  setSavingFoto(false);
+                }
+              }}
+              disabled={savingFoto}
+              size="sm"
+              className="mt-1 gold-gradient text-background text-xs h-8"
+            >
+              {savingFoto ? <Loader2 className="w-3 h-3 animate-spin" /> : <><Camera className="w-3 h-3 mr-1" /> Salvar Foto</>}
+            </Button>
+          )}
+          <h1 className="font-display text-xl font-bold mt-2">{user.nome}</h1>
           <span className="text-xs px-3 py-1 rounded-full bg-primary/10 text-primary mt-1">
             {user.perfil}
           </span>
@@ -110,6 +198,23 @@ export default function Perfil() {
                   placeholder="Uma breve descrição"
                 />
               </div>
+              {isBarbeiro && (
+                <div className="space-y-1">
+                  <Label className="text-xs">Tipo de Agenda</Label>
+                  <Select value={form.agenda} onValueChange={(v) => setForm({ ...form, agenda: v })}>
+                    <SelectTrigger className="h-10 bg-input border-border text-sm">
+                      <SelectValue placeholder="Selecione o tipo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">Diária</SelectItem>
+                      <SelectItem value="2">Semanal</SelectItem>
+                      <SelectItem value="3">Quinzenal</SelectItem>
+                      <SelectItem value="4">Mensal</SelectItem>
+                      <SelectItem value="5">Fechada</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <div className="flex gap-2 pt-2">
                 <Button
                   onClick={handleSave}
@@ -154,7 +259,7 @@ export default function Perfil() {
               )}
               {user.agenda && (
                 <div className="flex items-center gap-3">
-                  <User className="w-4 h-4 text-primary shrink-0" />
+                  <Calendar className="w-4 h-4 text-primary shrink-0" />
                   <div>
                     <p className="text-xs text-muted-foreground">Agenda</p>
                     <p className="text-sm">{user.agenda}</p>
@@ -163,6 +268,48 @@ export default function Perfil() {
               )}
             </div>
           )}
+        </div>
+
+        {/* Alterar Senha */}
+        <div className="bg-card border border-border rounded-lg p-4 mt-4">
+          <h2 className="font-semibold text-sm mb-3 flex items-center gap-2">
+            <Key className="w-4 h-4 text-primary" />
+            Alterar Senha
+          </h2>
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <Label className="text-xs">Nova Senha</Label>
+              <Input
+                type="password"
+                value={novaSenha}
+                onChange={(e) => setNovaSenha(e.target.value)}
+                placeholder="Mínimo 6 caracteres"
+                className="h-10 bg-input border-border text-sm"
+              />
+            </div>
+            <Button
+              onClick={async () => {
+                if (novaSenha.length < 6) {
+                  toast.error("A senha deve ter pelo menos 6 caracteres");
+                  return;
+                }
+                setSavingSenha(true);
+                try {
+                  await authApi.novaSenha(novaSenha);
+                  toast.success("Senha alterada com sucesso!");
+                  setNovaSenha("");
+                } catch (err: any) {
+                  toast.error(err.response?.data || "Erro ao alterar senha");
+                } finally {
+                  setSavingSenha(false);
+                }
+              }}
+              disabled={savingSenha}
+              className="gold-gradient text-background text-sm h-10"
+            >
+              {savingSenha ? <Loader2 className="w-4 h-4 animate-spin" /> : "Alterar Senha"}
+            </Button>
+          </div>
         </div>
 
         {/* Serviços do barbeiro */}

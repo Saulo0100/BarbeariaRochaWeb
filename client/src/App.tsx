@@ -13,7 +13,6 @@ import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
 import Agendar from "./pages/Agendar";
 import Servicos from "./pages/Servicos";
-import Configuracoes from "./pages/Configuracoes";
 import Perfil from "./pages/Perfil";
 import MeusCortes from "./pages/MeusCortes";
 import CorteAtual from "./pages/CorteAtual";
@@ -26,6 +25,7 @@ import Mensalistas from "./pages/Mensalistas";
 import Relatorios from "./pages/Relatorios";
 import ConfirmarEmail from "./pages/ConfirmarEmail";
 import AgendarParaCliente from "./pages/AgendarParaCliente";
+import CancelarAgendamento from "./pages/CancelarAgendamento";
 
 function Router() {
   return (
@@ -37,9 +37,8 @@ function Router() {
         <Route path="/cadastro" component={Cadastro} />
         <Route path="/confirmar-email" component={ConfirmarEmail} />
         <Route path="/agendar" component={Agendar} />
+        <Route path="/cancelar-agendamento" component={CancelarAgendamento} />
         <Route path="/servicos" component={Servicos} />
-        <Route path="/configuracoes" component={Configuracoes} />
-
         {/* Cliente */}
         <Route path="/meus-cortes" component={MeusCortes} />
         <Route path="/perfil" component={Perfil} />

@@ -1,5 +1,6 @@
 import axios from "axios";
 import type {
+  AgendamentoCancelarPorNumeroRequest,
   AgendamentoCriarRequest,
   AgendamentoCriarParaClienteRequest,
   AgendamentoCompletarRequest,
@@ -118,6 +119,9 @@ export const usuarioApi = {
   criar: (data: UsuarioCriarRequest) =>
     api.post("/api/Usuario", data),
 
+  criarComoAdmin: (data: UsuarioCriarRequest) =>
+    api.post("/api/Usuario/CriarComoAdmin", data),
+
   editar: (id: number, data: UsuarioEditarRequest) =>
     api.put(`/api/Usuario/${id}`, data),
 
@@ -177,6 +181,19 @@ export const agendamentoApi = {
 
   marcarClienteFaltou: (id: number) =>
     api.post(`/api/agendamento/${id}/ClienteFaltou`),
+
+  gerarTokenCancelamento: (numero: string) =>
+    api.post("/api/agendamento/GerarTokenCancelamento", JSON.stringify(numero), {
+      headers: { "Content-Type": "application/json" },
+    }),
+
+  pendentesPorNumero: (numero: string, codigo: number) =>
+    api.get<AgendamentoDetalheResponse[]>("/api/agendamento/PendentesPorNumero", {
+      params: { numero, codigo },
+    }),
+
+  cancelarPorNumero: (data: AgendamentoCancelarPorNumeroRequest) =>
+    api.post("/api/agendamento/CancelarPorNumero", data),
 
   listar: (pagina = 1, itensPorPagina = 10, filtro?: AgendamentoFiltroRequest) =>
     api.get<PaginacaoResultado<AgendamentoDetalheResponse>>("/api/agendamento", {

@@ -1,7 +1,7 @@
 /*
  * Design: Vintage Barbershop — Footer
  */
-import { Scissors, MapPin, Phone, Clock } from "lucide-react";
+import { Scissors, MapPin, Phone, Clock, ExternalLink, MessageCircle } from "lucide-react";
 
 export default function Footer() {
   return (
@@ -29,28 +29,39 @@ export default function Footer() {
               <p className="text-xs">Dom: Fechado</p>
             </div>
           </div>
-          <div className="flex items-start gap-3">
-            <Phone className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-            <div>
-              <p className="font-medium text-foreground text-xs">Contato</p>
-              <a
-                href="https://wa.me/554198254308"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-primary hover:underline"
-              >
-                (41) 98254-308 — WhatsApp
-              </a>
+          <a
+            href="https://wa.me/5541982543088"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-start gap-3 p-2 -m-2 rounded-lg hover:bg-primary/10 transition-colors group cursor-pointer"
+          >
+            <MessageCircle className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+            <div className="flex-1">
+              <p className="font-medium text-foreground text-xs flex items-center gap-1">
+                Contato via WhatsApp
+                <ExternalLink className="w-3 h-3 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+              </p>
+              <p className="text-xs text-primary font-medium">(41) 98254-3088</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Toque para abrir o WhatsApp</p>
             </div>
-          </div>
-          <div className="flex items-start gap-3">
+          </a>
+          <a
+            href="https://www.google.com/maps/search/?api=1&query=R.+La%C3%A9rte+Fenelon,+830+-+Ip%C3%AA,+S%C3%A3o+Jos%C3%A9+dos+Pinhais+-+PR,+83055-050"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-start gap-3 p-2 -m-2 rounded-lg hover:bg-primary/10 transition-colors group cursor-pointer"
+          >
             <MapPin className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-            <div>
-              <p className="font-medium text-foreground text-xs">Localização</p>
+            <div className="flex-1">
+              <p className="font-medium text-foreground text-xs flex items-center gap-1">
+                Localização
+                <ExternalLink className="w-3 h-3 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+              </p>
               <p className="text-xs">R. Laérte Fenelon, 830 - Ipê</p>
               <p className="text-xs">São José dos Pinhais - PR, 83055-050</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Toque para abrir no Google Maps</p>
             </div>
-          </div>
+          </a>
         </div>
 
         {/* Divider */}

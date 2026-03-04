@@ -107,7 +107,7 @@ export default function Login() {
                 type="tel"
                 placeholder="(11) 99999-9999"
                 value={formatNumero(numero)}
-                onChange={(e) => setNumero(e.target.value.replace(/\D/g, ""))}
+                onChange={(e) => setNumero(e.target.value.replace(/\D/g, "").slice(0, 11))}
                 className="h-12 bg-input border-border text-foreground placeholder:text-muted-foreground"
               />
             </div>
