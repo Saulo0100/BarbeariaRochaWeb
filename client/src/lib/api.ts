@@ -37,9 +37,12 @@ import type {
   UsuarioListarResponse,
 } from "./types";
 
-// A URL base da API deve ser configurada aqui
-// O usuário vai precisar ajustar para apontar ao backend real
-const API_BASE_URL = localStorage.getItem("apiBaseUrl") || "https://localhost:44396";
+// A URL base da API é lida da variável de ambiente VITE_API_BASE_URL (configurada no Render)
+// O localStorage permite sobrescrever em tempo de execução via página de Configurações
+const API_BASE_URL =
+  localStorage.getItem("apiBaseUrl") ||
+  import.meta.env.VITE_API_BASE_URL ||
+  "https://localhost:44396";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
