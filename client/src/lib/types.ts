@@ -124,11 +124,13 @@ export interface MensalistaCorteResponse {
 export interface MensalistaResponse {
   id: number;
   nome: string;
+  numero: string;
   tipo: string;
   status: string;
   dia: string;
   valor: number;
   cortesNoMes: number;
+  atendimentosNoMes: number;
   cortes: MensalistaCorteResponse[];
 }
 
