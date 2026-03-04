@@ -3,7 +3,7 @@
  * Hero com imagem da barbearia, CTA de agendamento, lista de serviços
  */
 import { Link, useLocation } from "wouter";
-import { Calendar, Scissors, Clock, Star, Search } from "lucide-react";
+import { Calendar, Scissors, Clock, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
@@ -185,20 +185,12 @@ export default function Home() {
           <p className="text-muted-foreground text-sm max-w-sm mx-auto mb-6">
             Escolha seu barbeiro, selecione o serviço e horário. Você pode agendar com ou sem cadastro.
           </p>
-          <div className="flex flex-col sm:flex-row items-center gap-3">
-            <Link href="/agendar">
-              <Button className="gold-gradient text-background font-semibold px-8 h-12">
-                <Calendar className="w-4 h-4 mr-2" />
-                Agendar Meu Corte
-              </Button>
-            </Link>
-            <Link href="/proximo-agendamento">
-              <Button variant="outline" className="border-primary/30 text-primary h-12 text-sm hover:bg-primary/10 px-6">
-                <Search className="w-4 h-4 mr-2" />
-                Ver Próximo Agendamento
-              </Button>
-            </Link>
-          </div>
+          <Link href="/agendar">
+            <Button className="gold-gradient text-background font-semibold px-8 h-12">
+              <Calendar className="w-4 h-4 mr-2" />
+              Agendar Meu Corte
+            </Button>
+          </Link>
         </div>
       </section>
     </div>

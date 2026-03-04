@@ -20,6 +20,7 @@ import {
   X as XIcon,
   UserPlus,
   Ban,
+  Search,
 } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -39,7 +40,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         { path: "/", icon: Home, label: "Início" },
         { path: "/agendar", icon: Calendar, label: "Agendar" },
         { path: "/cancelar-agendamento", icon: Ban, label: "Cancelar" },
-        { path: "/servicos", icon: Scissors, label: "Serviços" },
+        { path: "/proximo-agendamento", icon: Search, label: "Meu agendamento" },
         { path: "/login", icon: User, label: "Entrar" },
       ];
     }
