@@ -154,6 +154,13 @@ export default function Mensalistas() {
 
   const mesAtual = new Date().toLocaleDateString("pt-BR", { month: "long" });
 
+  const formatNumero = (value: string) => {
+    const digits = value.replace(/\D/g, "").slice(0, 11);
+    if (digits.length <= 2) return digits;
+    if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+  };
+
   // Filter cortes for current month
   const cortesDoMes = (cortes: MensalistaCorteResponse[]) => {
     const now = new Date();
@@ -194,9 +201,9 @@ export default function Mensalistas() {
               <div className="space-y-1">
                 <Label className="text-xs">Telefone</Label>
                 <Input
-                  value={form.numero}
+                  value={formatNumero(form.numero)}
                   onChange={(e) => setForm({ ...form, numero: e.target.value.replace(/\D/g, "") })}
-                  placeholder="11999999999"
+                  placeholder="(41) 99999-9999"
                   className="h-10 bg-input border-border text-sm"
                 />
               </div>
@@ -328,7 +335,7 @@ export default function Mensalistas() {
                         </div>
                         <div className="flex items-center gap-2">
                           <Phone className="w-3 h-3 text-primary" />
-                          {m.numero}
+                          {formatNumero(m.numero)}
                         </div>
                         <div className="flex items-center gap-2">
                           <Scissors className="w-3 h-3 text-primary" />
