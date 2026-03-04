@@ -68,6 +68,7 @@ export interface UsuarioListarResponse {
   numero: string;
   email: string;
   perfil: number;
+  foto?: string | null;
 }
 
 export interface BarbeirosDetalhesResponse {
@@ -105,6 +106,7 @@ export interface AgendamentoDetalheResponse {
   descricaoEtapa?: string | null;
   agendamentoPrincipalId?: number | null;
   adicionais?: AdicionalResponse[] | null;
+  valorServico?: number | null;
 }
 
 export interface HorariosOcupadosResponse {

@@ -210,6 +210,11 @@ export const agendamentoApi = {
   adicionaisDisponiveis: () =>
     api.get<AdicionalDisponivel[]>("/api/agendamento/AdicionaisDisponiveis"),
 
+  proximoAgendamentoPorNumero: (numero: string, codigo: number) =>
+    api.get<AgendamentoDetalheResponse>("/api/agendamento/ProximoAgendamentoPorNumero", {
+      params: { numero, codigo },
+    }),
+
   listar: (pagina = 1, itensPorPagina = 10, filtro?: AgendamentoFiltroRequest) =>
     api.get<PaginacaoResultado<AgendamentoDetalheResponse>>("/api/agendamento", {
       params: {
