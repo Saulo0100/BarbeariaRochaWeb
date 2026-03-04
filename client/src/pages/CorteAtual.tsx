@@ -5,7 +5,7 @@
  */
 import { useEffect, useState, useCallback } from "react";
 import { agendamentoApi } from "@/lib/api";
-import type { AgendamentoDetalheResponse } from "@/lib/types";
+import type { AgendamentoDetalheResponse, AdicionalDisponivel, AdicionalRequest } from "@/lib/types";
 import { MetodoPagamento } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import {
@@ -177,6 +177,14 @@ export default function CorteAtual() {
                       <span className="text-xs text-primary ml-2">({corte.descricaoEtapa})</span>
                     )}
                   </p>
+                  {corte.adicionais && corte.adicionais.length > 0 && (
+                    <div className="mt-1">
+                      <p className="text-[10px] text-muted-foreground">Adicionais:</p>
+                      {corte.adicionais.map(a => (
+                        <span key={a.id} className="text-[10px] text-primary mr-2">{a.nome} (R$ {a.valor.toFixed(2)})</span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -290,6 +298,7 @@ export default function CorteAtual() {
               {mode === "edit" && (
                 <EditarECompletar
                   corteId={corte.id}
+                  corteAdicionais={corte.adicionais}
                   onDone={() => {
                     setMode("view");
                     fetchCorteAtual();
@@ -323,10 +332,12 @@ export default function CorteAtual() {
 // Sub-component: Editar e Completar
 function EditarECompletar({
   corteId,
+  corteAdicionais,
   onDone,
   onCancel,
 }: {
   corteId: number;
+  corteAdicionais?: { id: number; nome: string; valor: number }[] | null;
   onDone: () => void;
   onCancel: () => void;
 }) {
@@ -334,15 +345,37 @@ function EditarECompletar({
   const [servicoId, setServicoId] = useState<string>("");
   const [metodoPagamento, setMetodoPagamento] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  const [adicionaisDisponiveis, setAdicionaisDisponiveis] = useState<AdicionalDisponivel[]>([]);
+  const [adicionaisSelecionados, setAdicionaisSelecionados] = useState<AdicionalRequest[]>(
+    corteAdicionais?.map(a => ({ nome: a.nome, valor: a.valor })) || []
+  );
 
   useEffect(() => {
-    import("@/lib/api").then(({ servicoApi }) => {
+    import("@/lib/api").then(({ servicoApi, agendamentoApi: agApi }) => {
       servicoApi.listar(1, 50).then((r) => {
         const items = r.data.items || [];
-        setServicos(items.map((s: any) => ({ id: s.id, nome: s.nome })));
+        setServicos(items.map((s: { id: number; nome: string }) => ({ id: s.id, nome: s.nome })));
+      });
+      agApi.adicionaisDisponiveis().then((r) => {
+        setAdicionaisDisponiveis(Array.isArray(r.data) ? r.data : []);
+      }).catch(() => {
+        setAdicionaisDisponiveis([
+          { nome: "Barba", valor: 15 },
+          { nome: "Sobrancelha", valor: 10 },
+          { nome: "Hidratação", valor: 25 },
+        ]);
       });
     });
   }, []);
+
+  const toggleAdicional = (ad: AdicionalDisponivel) => {
+    const exists = adicionaisSelecionados.some(s => s.nome === ad.nome);
+    if (exists) {
+      setAdicionaisSelecionados(prev => prev.filter(s => s.nome !== ad.nome));
+    } else {
+      setAdicionaisSelecionados(prev => [...prev, { nome: ad.nome, valor: ad.valor }]);
+    }
+  };
 
   const handleSubmit = async () => {
     if (!servicoId || !metodoPagamento) {
@@ -354,6 +387,7 @@ function EditarECompletar({
       await agendamentoApi.editarECompletar(corteId, {
         servicoId: parseInt(servicoId),
         metodoPagamento: parseInt(metodoPagamento) as MetodoPagamento,
+        adicionais: adicionaisSelecionados.length > 0 ? adicionaisSelecionados : undefined,
       });
       toast.success("Corte editado e finalizado!");
       onDone();
@@ -382,6 +416,36 @@ function EditarECompletar({
           </SelectContent>
         </Select>
       </div>
+      {/* Adicionais */}
+      {adicionaisDisponiveis.length > 0 && (
+        <div>
+          <p className="text-xs text-muted-foreground mb-1">Adicionais</p>
+          <div className="space-y-1">
+            {adicionaisDisponiveis.map((ad) => {
+              const isSelected = adicionaisSelecionados.some(s => s.nome === ad.nome);
+              return (
+                <button
+                  key={ad.nome}
+                  onClick={() => toggleAdicional(ad)}
+                  className={`w-full flex items-center justify-between p-2 rounded-md border text-xs transition-all ${
+                    isSelected ? "border-primary bg-primary/10" : "border-border bg-card hover:border-primary/30"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <div className={`w-4 h-4 rounded border flex items-center justify-center ${
+                      isSelected ? "border-primary bg-primary" : "border-muted-foreground"
+                    }`}>
+                      {isSelected && <span className="text-background text-[8px] font-bold">&#10003;</span>}
+                    </div>
+                    <span>{ad.nome}</span>
+                  </div>
+                  <span className="text-primary font-medium">+ R$ {ad.valor.toFixed(2)}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
       <div>
         <p className="text-xs text-muted-foreground mb-1">Método de Pagamento</p>
         <Select value={metodoPagamento} onValueChange={setMetodoPagamento}>

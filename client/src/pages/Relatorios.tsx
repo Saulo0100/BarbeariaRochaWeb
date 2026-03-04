@@ -11,6 +11,7 @@ import type {
   ClienteFrequenteResponse,
   FaturamentoPorPeriodoResponse,
   FaturamentoPorMetodoResponse,
+  RelatorioBarbeiroResponse,
   RelatorioFiltroRequest,
   BarbeirosDetalhesResponse,
 } from "@/lib/types";
@@ -73,8 +74,10 @@ export default function Relatorios() {
   const [topClientes, setTopClientes] = useState<ClienteFrequenteResponse[]>([]);
   const [faturamentoDiario, setFaturamentoDiario] = useState<FaturamentoPorPeriodoResponse[]>([]);
   const [faturamentoMetodo, setFaturamentoMetodo] = useState<FaturamentoPorMetodoResponse[]>([]);
+  const [relatorioBarbeiros, setRelatorioBarbeiros] = useState<RelatorioBarbeiroResponse[]>([]);
 
   const isAdmin = isPerfil("administrador") || isPerfil("barbeiroadministrador");
+  const isBarbeiroAdmin = isPerfil("barbeiroadministrador");
   const isBarbeiro = isPerfil("barbeiro") || isPerfil("barbeiroadministrador");
 
   useEffect(() => {
@@ -144,6 +147,16 @@ export default function Relatorios() {
       if (clientesRes.status === "fulfilled") setTopClientes(clientesRes.value.data);
       if (diarioRes.status === "fulfilled") setFaturamentoDiario(diarioRes.value.data);
       if (metodoRes.status === "fulfilled") setFaturamentoMetodo(metodoRes.value.data);
+
+      // BarbeiroAdmin also fetches per-barber report with commission data
+      if (isBarbeiroAdmin) {
+        try {
+          const barbeiroRes = await relatorioApi.porBarbeiro(filtro);
+          setRelatorioBarbeiros(barbeiroRes.data);
+        } catch {
+          // silently handle
+        }
+      }
     } catch {
       // silently handle errors
     } finally {
@@ -474,6 +487,56 @@ export default function Relatorios() {
                     Último: {new Date(c.ultimoAtendimento).toLocaleDateString("pt-BR")}
                   </span>
                 )}
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
+
+      {/* Per-Barber Commission Report (BarbeiroAdmin only) */}
+      {isBarbeiroAdmin && relatorioBarbeiros.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.55 }}
+          className="bg-card border border-border rounded-lg p-4"
+        >
+          <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+            <Users className="w-4 h-4 text-primary" />
+            Relatório por Barbeiro
+          </h3>
+          <div className="space-y-4">
+            {relatorioBarbeiros.map((b) => (
+              <div key={b.barbeiroId} className="border-b border-border pb-3 last:border-b-0 last:pb-0">
+                <p className="text-sm font-semibold">{b.nomeBarbeiro}</p>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-1">
+                  <div className="text-xs text-muted-foreground">Atendimentos:</div>
+                  <div className="text-xs font-medium text-right">{b.totalAtendimentos}</div>
+                  <div className="text-xs text-muted-foreground">Faturamento Bruto:</div>
+                  <div className="text-xs font-medium text-right">
+                    {formatCurrency(b.faturamentoBruto ?? b.faturamento)}
+                  </div>
+                  {b.porcentagemAdmin != null && (
+                    <>
+                      <div className="text-xs text-muted-foreground">Porcentagem Admin:</div>
+                      <div className="text-xs font-medium text-primary text-right">{b.porcentagemAdmin}%</div>
+                      <div className="text-xs text-muted-foreground">Comissão Admin:</div>
+                      <div className="text-xs font-medium text-primary text-right">
+                        {formatCurrency(b.valorComissaoAdmin ?? 0)}
+                      </div>
+                      <div className="text-xs text-muted-foreground">Faturamento Líquido:</div>
+                      <div className="text-xs font-bold text-right">
+                        {formatCurrency(b.faturamentoLiquido ?? b.faturamento)}
+                      </div>
+                    </>
+                  )}
+                  <div className="text-xs text-muted-foreground">Ticket Médio:</div>
+                  <div className="text-xs font-medium text-right">{formatCurrency(b.ticketMedio)}</div>
+                  <div className="text-xs text-muted-foreground">Cancelamentos:</div>
+                  <div className="text-xs font-medium text-right">{b.cancelamentosTotal}</div>
+                  <div className="text-xs text-muted-foreground">Taxa Conclusão:</div>
+                  <div className="text-xs font-medium text-right">{b.taxaConclusao}%</div>
+                </div>
               </div>
             ))}
           </div>

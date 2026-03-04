@@ -1,5 +1,6 @@
 import axios from "axios";
 import type {
+  AdicionalDisponivel,
   AgendamentoCancelarPorNumeroRequest,
   AgendamentoCriarRequest,
   AgendamentoCriarParaClienteRequest,
@@ -194,6 +195,15 @@ export const agendamentoApi = {
 
   cancelarPorNumero: (data: AgendamentoCancelarPorNumeroRequest) =>
     api.post("/api/agendamento/CancelarPorNumero", data),
+
+  cancelarComoCliente: (id: number) =>
+    api.delete(`/api/agendamento/${id}/CancelarComoCliente`),
+
+  meusAgendamentos: () =>
+    api.get<AgendamentoDetalheResponse[]>("/api/agendamento/MeusAgendamentos"),
+
+  adicionaisDisponiveis: () =>
+    api.get<AdicionalDisponivel[]>("/api/agendamento/AdicionaisDisponiveis"),
 
   listar: (pagina = 1, itensPorPagina = 10, filtro?: AgendamentoFiltroRequest) =>
     api.get<PaginacaoResultado<AgendamentoDetalheResponse>>("/api/agendamento", {

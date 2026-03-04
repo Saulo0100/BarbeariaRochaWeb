@@ -169,21 +169,39 @@ export default function Usuarios() {
                 </Select>
               </div>
               {(form.perfil === Perfil.Barbeiro || form.perfil === Perfil.BarbeiroAdministrador) && (
-                <div className="space-y-1">
-                  <Label className="text-xs">Agenda</Label>
-                  <Select value={String(form.agenda || "")} onValueChange={(v) => setForm({ ...form, agenda: parseInt(v) as TipoAgenda })}>
-                    <SelectTrigger className="h-10 bg-input border-border text-sm">
-                      <SelectValue placeholder="Tipo de agenda" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">Diária</SelectItem>
-                      <SelectItem value="2">Semanal</SelectItem>
-                      <SelectItem value="3">Quinzenal</SelectItem>
-                      <SelectItem value="4">Mensal</SelectItem>
-                      <SelectItem value="5">Fechada</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Agenda</Label>
+                    <Select value={String(form.agenda || "")} onValueChange={(v) => setForm({ ...form, agenda: parseInt(v) as TipoAgenda })}>
+                      <SelectTrigger className="h-10 bg-input border-border text-sm">
+                        <SelectValue placeholder="Tipo de agenda" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">Diária</SelectItem>
+                        <SelectItem value="2">Semanal</SelectItem>
+                        <SelectItem value="3">Quinzenal</SelectItem>
+                        <SelectItem value="4">Mensal</SelectItem>
+                        <SelectItem value="5">Fechada</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {form.perfil === Perfil.Barbeiro && (
+                    <div className="space-y-1">
+                      <Label className="text-xs">Porcentagem do Admin (%)</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        max={100}
+                        step={1}
+                        value={form.porcentagem || ""}
+                        onChange={(e) => setForm({ ...form, porcentagem: e.target.value ? Number(e.target.value) : undefined })}
+                        className="h-10 bg-input border-border text-sm"
+                        placeholder="Ex: 50"
+                      />
+                      <p className="text-[10px] text-muted-foreground">Porcentagem que o admin recebe sobre o faturamento deste barbeiro</p>
+                    </div>
+                  )}
+                </>
               )}
               <div className="space-y-1">
                 <Label className="text-xs">Descrição</Label>
