@@ -216,7 +216,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       {/* Main Content */}
       <main className="flex-1 pb-20">
         {children}
-        <Footer />
+        {!isAuthenticated && <Footer />}
       </main>
 
       {/* Bottom Navigation */}
