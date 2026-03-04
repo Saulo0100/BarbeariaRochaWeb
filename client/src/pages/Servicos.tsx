@@ -22,11 +22,12 @@ export default function Servicos() {
       .finally(() => setLoading(false));
   }, []);
 
-  const categorias = ["Todos", ...Array.from(new Set(servicos.map((s) => s.categoria)))];
+  const sorted = [...servicos].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+  const categorias = ["Todos", ...Array.from(new Set(sorted.map((s) => s.categoria)))];
   const filtered =
     filtroCategoria === "Todos"
-      ? servicos
-      : servicos.filter((s) => s.categoria === filtroCategoria);
+      ? sorted
+      : sorted.filter((s) => s.categoria === filtroCategoria);
 
   return (
     <div>

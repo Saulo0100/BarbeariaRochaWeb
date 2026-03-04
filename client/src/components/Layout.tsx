@@ -86,9 +86,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="container flex items-center justify-between h-14">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full gold-gradient flex items-center justify-center">
-              <Scissors className="w-4 h-4 text-background" />
-            </div>
+            <img src="/logo-rocha.png" alt="Barbearia Rocha" className="w-8 h-8 rounded-full object-contain" />
             <span className="font-display text-lg font-bold gold-text">
               Barbearia Rocha
             </span>

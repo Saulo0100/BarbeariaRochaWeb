@@ -134,6 +134,9 @@ export const usuarioApi = {
   me: () =>
     api.get<UsuarioDetalhesResponse>("/api/Usuario/me"),
 
+  confirmarEmail: (token: string) =>
+    api.get<string>("/api/Usuario/ConfirmarEmail", { params: { token } }),
+
   listarBarbeiros: () =>
     api.get<BarbeirosDetalhesResponse[]>("/Barbeiro/Listar"),
 };
