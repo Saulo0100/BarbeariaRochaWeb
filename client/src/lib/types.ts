@@ -115,6 +115,12 @@ export interface ExcecaoDetalhesResponse {
   nomeBarbeiro?: string | null;
 }
 
+export interface MensalistaCorteResponse {
+  id: number;
+  dataCorte: string;
+  observacao?: string | null;
+}
+
 export interface MensalistaResponse {
   id: number;
   nome: string;
@@ -122,6 +128,8 @@ export interface MensalistaResponse {
   status: string;
   dia: string;
   valor: number;
+  cortesNoMes: number;
+  cortes: MensalistaCorteResponse[];
 }
 
 export interface PaginacaoResultado<T> {
@@ -206,6 +214,21 @@ export interface MensalistaCriarRequest {
   valor: number;
   dia: number;
   tipo: MensalistaTipo;
+}
+
+export interface MensalistaRegistrarCorteRequest {
+  mensalistaId: number;
+  dataCorte: string;
+  observacao?: string;
+}
+
+export interface AgendamentoCriarParaClienteRequest {
+  barbeiroId: number;
+  servicoId: number;
+  dtAgendamento: string;
+  numero: string;
+  nome: string;
+  dtAgendamentoEtapa2?: string;
 }
 
 // ===== RELATORIO RESPONSE MODELS =====

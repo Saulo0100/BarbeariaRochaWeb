@@ -19,6 +19,7 @@ import {
   BarChart3,
   Menu,
   X,
+  UserPlus,
 } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -121,6 +122,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 {(isPerfil("administrador") || isPerfil("barbeiroadministrador")) && (
                   <>
                     <Link
+                      href="/agendar-cliente"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
+                    >
+                      <UserPlus className="w-4 h-4" />
+                      Agendar para Cliente
+                    </Link>
+                    <Link
                       href="/servicos-admin"
                       onClick={() => setMenuOpen(false)}
                       className="flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
@@ -156,14 +165,24 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 )}
 
                 {isPerfil("barbeiro") && (
-                  <Link
-                    href="/excecoes"
-                    onClick={() => setMenuOpen(false)}
-                    className="flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
-                  >
-                    <Calendar className="w-4 h-4" />
-                    Minhas Exceções
-                  </Link>
+                  <>
+                    <Link
+                      href="/agendar-cliente"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
+                    >
+                      <UserPlus className="w-4 h-4" />
+                      Agendar para Cliente
+                    </Link>
+                    <Link
+                      href="/excecoes"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
+                    >
+                      <Calendar className="w-4 h-4" />
+                      Minhas Exceções
+                    </Link>
+                  </>
                 )}
 
                 <Link
