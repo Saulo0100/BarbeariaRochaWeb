@@ -129,6 +129,11 @@ export const usuarioApi = {
   excluir: (id: number) =>
     api.delete(`/api/Usuario/${id}`),
 
+  editarPorcentagem: (id: number, porcentagem: number) =>
+    api.patch(`/api/Usuario/${id}/Porcentagem`, porcentagem, {
+      headers: { "Content-Type": "application/json" },
+    }),
+
   obterPorId: (id: number) =>
     api.get<UsuarioDetalhesResponse>(`/api/Usuario/${id}`),
 

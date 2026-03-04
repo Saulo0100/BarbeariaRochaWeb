@@ -259,28 +259,19 @@ export default function Relatorios() {
             />
           </div>
 
-          {/* Row 2: Ticket Médio, Pendentes, Cancelamentos */}
-          <div className="grid grid-cols-3 gap-3">
-            <StatCard
-              icon={TrendingUp}
-              label="Ticket Médio"
-              value={formatCurrency(geral.ticketMedio)}
-              delay={0.1}
-              small
-            />
+          {/* Row 2: Pendentes, Cancelamentos */}
+          <div className="grid grid-cols-2 gap-3">
             <StatCard
               icon={Calendar}
               label="Pendentes"
               value={String(geral.agendamentosPendentes)}
-              delay={0.15}
-              small
+              delay={0.1}
             />
             <StatCard
               icon={XCircle}
               label="Cancelamentos"
               value={String(geral.cancelamentosTotal)}
-              delay={0.2}
-              small
+              delay={0.15}
             />
           </div>
 
@@ -493,6 +484,23 @@ export default function Relatorios() {
         </motion.div>
       )}
 
+      {/* Admin Commission Total (BarbeiroAdmin only) */}
+      {isBarbeiroAdmin && relatorioBarbeiros.length > 0 && (() => {
+        const totalComissao = relatorioBarbeiros.reduce((sum, b) => sum + (b.valorComissaoAdmin ?? 0), 0);
+        return totalComissao > 0 ? (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.52 }}
+            className="bg-card border border-primary/30 rounded-lg p-4 text-center"
+          >
+            <Crown className="w-5 h-5 text-primary mx-auto mb-1" />
+            <p className="font-display text-xl font-bold text-primary">{formatCurrency(totalComissao)}</p>
+            <p className="text-[10px] text-muted-foreground">Total de Comissões do Admin</p>
+          </motion.div>
+        ) : null;
+      })()}
+
       {/* Per-Barber Commission Report (BarbeiroAdmin only) */}
       {isBarbeiroAdmin && relatorioBarbeiros.length > 0 && (
         <motion.div
@@ -530,8 +538,6 @@ export default function Relatorios() {
                       </div>
                     </>
                   )}
-                  <div className="text-xs text-muted-foreground">Ticket Médio:</div>
-                  <div className="text-xs font-medium text-right">{formatCurrency(b.ticketMedio)}</div>
                   <div className="text-xs text-muted-foreground">Cancelamentos:</div>
                   <div className="text-xs font-medium text-right">{b.cancelamentosTotal}</div>
                   <div className="text-xs text-muted-foreground">Taxa Conclusão:</div>

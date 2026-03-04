@@ -21,6 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Users,
@@ -30,6 +31,7 @@ import {
   Trash2,
   ChevronLeft,
   ChevronRight,
+  Pencil,
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
@@ -57,6 +59,12 @@ export default function Usuarios() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [deleting, setDeleting] = useState<number | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<UsuarioListarResponse | null>(null);
+  const [pctDialogOpen, setPctDialogOpen] = useState(false);
+  const [pctTarget, setPctTarget] = useState<UsuarioListarResponse | null>(null);
+  const [pctValue, setPctValue] = useState("");
+  const [pctSaving, setPctSaving] = useState(false);
 
   const [form, setForm] = useState<UsuarioCriarRequest>({
     nome: "",
@@ -68,6 +76,13 @@ export default function Usuarios() {
   });
 
   const itensPorPagina = 10;
+
+  const formatNumero = (value: string) => {
+    const digits = value.replace(/\D/g, "").slice(0, 11);
+    if (digits.length <= 2) return digits;
+    if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+  };
 
   const fetchUsuarios = useCallback(() => {
     setLoading(true);
@@ -106,12 +121,36 @@ export default function Usuarios() {
     }
   };
 
-  const handleExcluir = async (id: number) => {
-    if (!confirm("Deseja excluir este usuário?")) return;
-    setDeleting(id);
+  const handleEditarPorcentagem = async () => {
+    if (!pctTarget) return;
+    const valor = Number(pctValue);
+    if (isNaN(valor) || valor < 0 || valor > 100) {
+      toast.error("Porcentagem deve estar entre 0 e 100");
+      return;
+    }
+    setPctSaving(true);
     try {
-      await usuarioApi.excluir(id);
+      await usuarioApi.editarPorcentagem(pctTarget.id, valor);
+      toast.success("Porcentagem atualizada!");
+      setPctDialogOpen(false);
+      setPctTarget(null);
+      setPctValue("");
+      fetchUsuarios();
+    } catch (err: any) {
+      toast.error(err.response?.data || "Erro ao atualizar porcentagem");
+    } finally {
+      setPctSaving(false);
+    }
+  };
+
+  const handleExcluir = async () => {
+    if (!deleteTarget) return;
+    setDeleting(deleteTarget.id);
+    try {
+      await usuarioApi.excluir(deleteTarget.id);
       toast.success("Usuário excluído");
+      setDeleteDialogOpen(false);
+      setDeleteTarget(null);
       fetchUsuarios();
     } catch (err: any) {
       toast.error(err.response?.data || "Erro ao excluir");
@@ -144,7 +183,16 @@ export default function Usuarios() {
               </div>
               <div className="space-y-1">
                 <Label className="text-xs">Telefone</Label>
-                <Input value={form.numero} onChange={(e) => setForm({ ...form, numero: e.target.value.replace(/\D/g, "") })} className="h-10 bg-input border-border text-sm" placeholder="11999999999" />
+                <Input
+                  value={formatNumero(form.numero)}
+                  onChange={(e) => {
+                    const digits = e.target.value.replace(/\D/g, "").slice(0, 11);
+                    setForm({ ...form, numero: digits });
+                  }}
+                  className="h-10 bg-input border-border text-sm"
+                  placeholder="(11) 99999-9999"
+                  maxLength={15}
+                />
               </div>
               <div className="space-y-1">
                 <Label className="text-xs">Email</Label>
@@ -255,13 +303,31 @@ export default function Usuarios() {
                   {perfilLabels[u.perfil] || u.perfil}
                 </span>
               </div>
-              <button
-                onClick={() => handleExcluir(u.id)}
-                disabled={deleting === u.id}
-                className="p-2 text-muted-foreground hover:text-destructive transition-colors shrink-0"
-              >
-                {deleting === u.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-              </button>
+              <div className="flex items-center gap-1 shrink-0">
+                {(u.perfil === 2) && (
+                  <button
+                    onClick={() => {
+                      setPctTarget(u);
+                      setPctValue("");
+                      setPctDialogOpen(true);
+                    }}
+                    className="p-2 text-muted-foreground hover:text-primary transition-colors"
+                    title="Editar porcentagem"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                )}
+                <button
+                  onClick={() => {
+                    setDeleteTarget(u);
+                    setDeleteDialogOpen(true);
+                  }}
+                  disabled={deleting === u.id}
+                  className="p-2 text-muted-foreground hover:text-destructive transition-colors"
+                >
+                  {deleting === u.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                </button>
+              </div>
             </motion.div>
           ))}
 
@@ -280,6 +346,78 @@ export default function Usuarios() {
       ) : (
         <div className="text-center py-12 text-muted-foreground text-sm">Nenhum usuário encontrado</div>
       )}
+
+      {/* Edit Porcentagem Dialog */}
+      <Dialog open={pctDialogOpen} onOpenChange={setPctDialogOpen}>
+        <DialogContent className="bg-card border-border max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="font-display">Editar Porcentagem</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Alterar a porcentagem de comissão do barbeiro <strong>{pctTarget?.nome}</strong>.
+              A alteração só afeta agendamentos futuros.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 mt-2">
+            <div className="space-y-1">
+              <Label className="text-xs">Nova Porcentagem (%)</Label>
+              <Input
+                type="number"
+                min={0}
+                max={100}
+                step={1}
+                value={pctValue}
+                onChange={(e) => setPctValue(e.target.value)}
+                className="h-10 bg-input border-border text-sm"
+                placeholder="Ex: 50"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={handleEditarPorcentagem}
+                disabled={pctSaving}
+                className="flex-1 h-10 gold-gradient text-background text-sm"
+              >
+                {pctSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Salvar"}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setPctDialogOpen(false)}
+                className="h-10 text-sm border-border"
+              >
+                Cancelar
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="bg-card border-border max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="font-display">Excluir Usuário</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Deseja realmente excluir o usuário <strong>{deleteTarget?.nome}</strong>?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-2 mt-2">
+            <Button
+              onClick={handleExcluir}
+              disabled={deleting !== null}
+              className="flex-1 h-10 bg-destructive text-destructive-foreground hover:bg-destructive/90 text-sm"
+            >
+              {deleting !== null ? <Loader2 className="w-4 h-4 animate-spin" /> : "Confirmar Exclusão"}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+              className="h-10 text-sm border-border"
+            >
+              Cancelar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
