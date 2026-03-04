@@ -272,7 +272,6 @@ export interface RelatorioGeralResponse {
   faturamentoHoje: number;
   faturamentoSemana: number;
   faturamentoMes: number;
-  ticketMedio: number;
   agendamentosPendentes: number;
   cancelamentosTotal: number;
   clientesFaltaram: number;
@@ -316,7 +315,6 @@ export interface RelatorioBarbeiroResponse {
   nomeBarbeiro: string;
   totalAtendimentos: number;
   faturamento: number;
-  ticketMedio: number;
   cancelamentosTotal: number;
   clientesFaltaram: number;
   taxaConclusao: number;
