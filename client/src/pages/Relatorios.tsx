@@ -318,25 +318,25 @@ export default function Relatorios() {
           <div className="h-48">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={faturamentoDiario}>
-                <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.30 0.02 60)" />
+                <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.24 0.02 65)" />
                 <XAxis
                   dataKey="periodo"
-                  tick={{ fontSize: 10, fill: "oklch(0.60 0.01 80)" }}
+                  tick={{ fontSize: 10, fill: "oklch(0.60 0.03 75)" }}
                   tickLine={false}
                 />
                 <YAxis
-                  tick={{ fontSize: 10, fill: "oklch(0.60 0.01 80)" }}
+                  tick={{ fontSize: 10, fill: "oklch(0.60 0.03 75)" }}
                   tickLine={false}
                   tickFormatter={(v) => `R$${v}`}
                 />
                 <Tooltip
                   contentStyle={{
-                    background: "oklch(0.19 0.015 55)",
-                    border: "1px solid oklch(0.30 0.02 60)",
+                    background: "oklch(0.13 0.01 60)",
+                    border: "1px solid oklch(0.24 0.02 65)",
                     borderRadius: 8,
                     fontSize: 12,
                   }}
-                  labelStyle={{ color: "oklch(0.93 0.01 80)" }}
+                  labelStyle={{ color: "oklch(0.92 0.02 75)" }}
                   formatter={(value: number) => [formatCurrency(value), "Faturamento"]}
                 />
                 <Line
@@ -367,18 +367,18 @@ export default function Relatorios() {
           <div className="h-40">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={topServicos} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.30 0.02 60)" />
-                <XAxis type="number" tick={{ fontSize: 10, fill: "oklch(0.60 0.01 80)" }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.24 0.02 65)" />
+                <XAxis type="number" tick={{ fontSize: 10, fill: "oklch(0.60 0.03 75)" }} />
                 <YAxis
                   type="category"
                   dataKey="nomeServico"
-                  tick={{ fontSize: 10, fill: "oklch(0.60 0.01 80)" }}
+                  tick={{ fontSize: 10, fill: "oklch(0.60 0.03 75)" }}
                   width={80}
                 />
                 <Tooltip
                   contentStyle={{
-                    background: "oklch(0.19 0.015 55)",
-                    border: "1px solid oklch(0.30 0.02 60)",
+                    background: "oklch(0.13 0.01 60)",
+                    border: "1px solid oklch(0.24 0.02 65)",
                     borderRadius: 8,
                     fontSize: 12,
                   }}
@@ -421,8 +421,8 @@ export default function Relatorios() {
                 </Pie>
                 <Tooltip
                   contentStyle={{
-                    background: "oklch(0.19 0.015 55)",
-                    border: "1px solid oklch(0.30 0.02 60)",
+                    background: "oklch(0.13 0.01 60)",
+                    border: "1px solid oklch(0.24 0.02 65)",
                     borderRadius: 8,
                     fontSize: 12,
                   }}
