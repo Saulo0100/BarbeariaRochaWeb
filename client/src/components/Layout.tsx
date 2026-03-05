@@ -39,8 +39,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       return [
         { path: "/", icon: Home, label: "Início" },
         { path: "/agendar", icon: Calendar, label: "Agendar" },
-        { path: "/cancelar-agendamento", icon: Ban, label: "Cancelar" },
-        { path: "/proximo-agendamento", icon: Search, label: "Meu agendamento" },
+        { path: "/proximo-agendamento", icon: Search, label: "Meus agendamentos" },
         { path: "/login", icon: User, label: "Entrar" },
       ];
     }
