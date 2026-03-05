@@ -66,7 +66,6 @@ export default function Dashboard() {
     { href: "/servicos-admin", icon: ClipboardList, label: "Serviços", color: "text-orange-400" },
     { href: "/excecoes", icon: AlertTriangle, label: "Exceções", color: "text-red-400" },
     { href: "/mensalistas", icon: Calendar, label: "Mensalistas", color: "text-purple-400" },
-    { href: "/configuracoes", icon: Clock, label: "Configurações", color: "text-gray-400" },
   ];
 
   return (
