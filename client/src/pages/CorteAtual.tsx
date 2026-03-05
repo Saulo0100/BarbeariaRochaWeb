@@ -26,6 +26,7 @@ import {
   CreditCard,
   Edit3,
   UserX,
+  DollarSign,
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
@@ -209,6 +210,29 @@ export default function CorteAtual() {
                   <p className="font-semibold text-sm">{corte.status}</p>
                 </div>
               </div>
+
+              {/* Valor Total */}
+              {(() => {
+                const valorServico = corte.valorServico ?? 0;
+                const valorAdicionais = (corte.adicionais || []).reduce((sum, a) => sum + a.valor, 0);
+                const total = valorServico + valorAdicionais;
+                return total > 0 ? (
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                      <DollarSign className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Valor Total</p>
+                      <p className="font-display text-lg font-bold text-primary">R$ {total.toFixed(2)}</p>
+                      {valorAdicionais > 0 && (
+                        <p className="text-[10px] text-muted-foreground">
+                          Servi\u00e7o: R$ {valorServico.toFixed(2)} + Adicionais: R$ {valorAdicionais.toFixed(2)}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ) : null;
+              })()}
             </div>
 
             {/* Actions */}
@@ -341,7 +365,7 @@ function EditarECompletar({
   onDone: () => void;
   onCancel: () => void;
 }) {
-  const [servicos, setServicos] = useState<{ id: number; nome: string }[]>([]);
+  const [servicos, setServicos] = useState<{ id: number; nome: string; valor: number }[]>([]);
   const [servicoId, setServicoId] = useState<string>("");
   const [metodoPagamento, setMetodoPagamento] = useState<string>("");
   const [loading, setLoading] = useState(false);
@@ -354,7 +378,7 @@ function EditarECompletar({
     import("@/lib/api").then(({ servicoApi, agendamentoApi: agApi }) => {
       servicoApi.listar(1, 50).then((r) => {
         const items = r.data.items || [];
-        setServicos(items.map((s: { id: number; nome: string }) => ({ id: s.id, nome: s.nome })));
+        setServicos(items.map((s: { id: number; nome: string; valor: number }) => ({ id: s.id, nome: s.nome, valor: s.valor })));
       });
       agApi.adicionaisDisponiveis().then((r) => {
         setAdicionaisDisponiveis(Array.isArray(r.data) ? r.data : []);
@@ -461,6 +485,19 @@ function EditarECompletar({
           </SelectContent>
         </Select>
       </div>
+      {/* Valor Total no modo edição */}
+      {(() => {
+        const selServico = servicos.find(s => String(s.id) === servicoId);
+        const valorServ = selServico?.valor ?? 0;
+        const valorAds = adicionaisSelecionados.reduce((sum, a) => sum + a.valor, 0);
+        const totalEdit = valorServ + valorAds;
+        return totalEdit > 0 ? (
+          <div className="bg-primary/10 border border-primary/30 rounded-lg p-3 flex items-center justify-between">
+            <span className="text-xs font-medium text-muted-foreground">Valor Total</span>
+            <span className="font-display text-lg font-bold text-primary">R$ {totalEdit.toFixed(2)}</span>
+          </div>
+        ) : null;
+      })()}
       <div className="flex gap-2">
         <Button
           onClick={handleSubmit}
