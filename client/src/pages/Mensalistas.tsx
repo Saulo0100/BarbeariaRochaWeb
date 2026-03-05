@@ -85,24 +85,22 @@ export default function Mensalistas() {
       return;
     }
     setLoadingHorarios(true);
-    // Find next occurrence of the selected day of week
-    const targetDay = parseInt(form.dia);
-    const today = new Date();
-    let nextDate = new Date(today);
-    while (nextDate.getDay() !== targetDay) {
-      nextDate.setDate(nextDate.getDate() + 1);
-    }
-    const dataStr = nextDate.toISOString().split("T")[0];
-    horarioApi.disponiveis(parseInt(form.barbeiroId), dataStr)
+    const diaSemana = parseInt(form.dia);
+    const barbeiroId = parseInt(form.barbeiroId);
+    horarioApi.horariosMensalista(barbeiroId, diaSemana)
       .then((r) => {
-        // Show all slots for the day (not just available ones), since mensalista needs any valid slot
-        const allSlots = [...(r.data.horariosDisponiveis || []), ...(r.data.horariosOcupados || [])].sort();
-        // Remove duplicates
-        setHorariosDisponiveis(Array.from(new Set(allSlots)));
+        const allSlots: string[] = r.data || [];
+        // Filter out slots already taken by other active mensalistas for this barbeiro+day
+        const diaName = ["domingo", "segunda-feira", "ter\u00e7a-feira", "quarta-feira", "quinta-feira", "sexta-feira", "s\u00e1bado"][diaSemana];
+        const takenSlots = mensalistas
+          .filter((m) => m.status === "Ativo" && m.barbeiroId === barbeiroId && m.dia.toLowerCase() === diaName && m.horario)
+          .map((m) => m.horario as string);
+        const available = allSlots.filter((h) => !takenSlots.includes(h));
+        setHorariosDisponiveis(available);
       })
       .catch(() => setHorariosDisponiveis([]))
       .finally(() => setLoadingHorarios(false));
-  }, [form.dia, form.barbeiroId]);
+  }, [form.dia, form.barbeiroId, mensalistas]);
 
   const handleCriar = async () => {
     if (!form.nome || !form.numero || !form.valor || !form.dia) {
@@ -275,7 +273,6 @@ export default function Mensalistas() {
                       <SelectItem value="4">Quinta-feira</SelectItem>
                       <SelectItem value="5">Sexta-feira</SelectItem>
                       <SelectItem value="6">Sábado</SelectItem>
-                      <SelectItem value="0">Domingo</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
