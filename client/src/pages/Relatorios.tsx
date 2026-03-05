@@ -526,8 +526,6 @@ export default function Relatorios() {
                   </div>
                   {b.porcentagemAdmin != null && (
                     <>
-                      <div className="text-xs text-muted-foreground">Porcentagem Admin:</div>
-                      <div className="text-xs font-medium text-primary text-right">{b.porcentagemAdmin}%</div>
                       <div className="text-xs text-muted-foreground">Comissão Admin:</div>
                       <div className="text-xs font-medium text-primary text-right">
                         {formatCurrency(b.valorComissaoAdmin ?? 0)}
