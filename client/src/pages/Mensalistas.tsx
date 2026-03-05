@@ -247,6 +247,7 @@ export default function Mensalistas() {
                 <Input
                   value={formatNumero(form.numero)}
                   onChange={(e) => setForm({ ...form, numero: e.target.value.replace(/\D/g, "") })}
+                  maxLength={15} // se estiver formatado (ex: "(41) 99999-9999")
                   placeholder="(41) 99999-9999"
                   className="h-10 bg-input border-border text-sm"
                 />
