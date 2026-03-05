@@ -609,7 +609,10 @@ export default function AgendarParaCliente() {
                   <Label className="text-xs">Telefone</Label>
                   <Input
                     value={formatNumero(numero)}
-                    onChange={(e) => setNumero(e.target.value)}
+                    onChange={(e) => {
+                      const digits = e.target.value.replace(/\D/g, "").slice(0, 11);
+                      setNumero(digits);
+                    }}
                     placeholder="(00) 00000-0000"
                     className="h-10 bg-input border-border text-sm"
                   />

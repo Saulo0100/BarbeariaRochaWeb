@@ -295,6 +295,9 @@ export const mensalistaApi = {
 
   deletarCorte: (corteId: number) =>
     api.delete(`/api/Mensalista/corte/${corteId}`),
+
+  gerarAgendamentos: () =>
+    api.post("/api/Mensalista/gerar-agendamentos"),
 };
 
 // ===== RELATÓRIO =====

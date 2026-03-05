@@ -5,7 +5,7 @@ import { useEffect, useState, useCallback } from "react";
 import { usuarioApi } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import type { UsuarioListarResponse, UsuarioCriarRequest } from "@/lib/types";
-import { Perfil, TipoAgenda } from "@/lib/types";
+import { Perfil, TipoAgenda, PeriodoTrabalho } from "@/lib/types";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -237,20 +237,36 @@ export default function Usuarios() {
                     </Select>
                   </div>
                   {form.perfil === Perfil.Barbeiro && (
-                    <div className="space-y-1">
-                      <Label className="text-xs">Porcentagem do Admin (%)</Label>
-                      <Input
-                        type="number"
-                        min={0}
-                        max={100}
-                        step={1}
-                        value={form.porcentagem || ""}
-                        onChange={(e) => setForm({ ...form, porcentagem: e.target.value ? Number(e.target.value) : undefined })}
-                        className="h-10 bg-input border-border text-sm"
-                        placeholder="Ex: 50"
-                      />
-                      <p className="text-[10px] text-muted-foreground">Porcentagem que o admin recebe sobre o faturamento deste barbeiro</p>
-                    </div>
+                    <>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Porcentagem do Admin (%)</Label>
+                        <Input
+                          type="number"
+                          min={0}
+                          max={100}
+                          step={1}
+                          value={form.porcentagem || ""}
+                          onChange={(e) => setForm({ ...form, porcentagem: e.target.value ? Number(e.target.value) : undefined })}
+                          className="h-10 bg-input border-border text-sm"
+                          placeholder="Ex: 50"
+                        />
+                        <p className="text-[10px] text-muted-foreground">Porcentagem que o admin recebe sobre o faturamento deste barbeiro</p>
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Período de Trabalho</Label>
+                        <Select value={String(form.periodoTrabalho || PeriodoTrabalho.DiaTodo)} onValueChange={(v) => setForm({ ...form, periodoTrabalho: parseInt(v) })}>
+                          <SelectTrigger className="h-10 bg-input border-border text-sm">
+                            <SelectValue placeholder="Período" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value={String(PeriodoTrabalho.DiaTodo)}>Dia Todo</SelectItem>
+                            <SelectItem value={String(PeriodoTrabalho.Manha)}>Manhã</SelectItem>
+                            <SelectItem value={String(PeriodoTrabalho.Tarde)}>Tarde</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <p className="text-[10px] text-muted-foreground">Manhã: horários até o almoço. Tarde: a partir do almoço.</p>
+                      </div>
+                    </>
                   )}
                 </>
               )}
