@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
@@ -6,6 +7,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import Layout from "./components/Layout";
+import { mensalistaApi } from "./lib/api";
 
 // Pages
 import Home from "./pages/Home";
@@ -70,6 +72,13 @@ function Router() {
 }
 
 function App() {
+  // Auto-refresh mensalista appointments on app load
+  useEffect(() => {
+    mensalistaApi.gerarAgendamentos().catch(() => {
+      // Silently ignore errors - endpoint may not be available yet
+    });
+  }, []);
+
   return (
     <ErrorBoundary>
       <ThemeProvider defaultTheme="dark">

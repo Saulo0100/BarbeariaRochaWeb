@@ -3,8 +3,8 @@
  * Gerenciar clientes mensalistas + controle de cortes
  */
 import { useEffect, useState, useCallback } from "react";
-import { mensalistaApi } from "@/lib/api";
-import type { MensalistaResponse, MensalistaCorteResponse } from "@/lib/types";
+import { mensalistaApi, usuarioApi, horarioApi } from "@/lib/api";
+import type { MensalistaResponse, MensalistaCorteResponse, BarbeirosDetalhesResponse } from "@/lib/types";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -24,7 +24,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { TrendingUp, Plus, Loader2, Trash2, DollarSign, Calendar, Scissors, ChevronDown, ChevronUp, Phone } from "lucide-react";
+import { TrendingUp, Plus, Loader2, Trash2, DollarSign, Calendar, Scissors, ChevronDown, ChevronUp, Phone, Clock, User } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -44,12 +44,18 @@ export default function Mensalistas() {
   const [registrandoCorte, setRegistrandoCorte] = useState(false);
   const [deletandoCorte, setDeletandoCorte] = useState<number | null>(null);
 
+  const [barbeiros, setBarbeiros] = useState<BarbeirosDetalhesResponse[]>([]);
+  const [horariosDisponiveis, setHorariosDisponiveis] = useState<string[]>([]);
+  const [loadingHorarios, setLoadingHorarios] = useState(false);
+
   const [form, setForm] = useState({
     nome: "",
     numero: "",
     valor: "",
     dia: "",
     tipo: "1",
+    barbeiroId: "",
+    horario: "",
   });
 
   const fetchMensalistas = useCallback(() => {
@@ -68,6 +74,36 @@ export default function Mensalistas() {
     fetchMensalistas();
   }, [fetchMensalistas]);
 
+  useEffect(() => {
+    usuarioApi.listarBarbeiros().then((r) => setBarbeiros(r.data || [])).catch(() => {});
+  }, []);
+
+  // Load available times when day + barber are selected
+  useEffect(() => {
+    if (!form.dia || !form.barbeiroId) {
+      setHorariosDisponiveis([]);
+      return;
+    }
+    setLoadingHorarios(true);
+    // Find next occurrence of the selected day of week
+    const targetDay = parseInt(form.dia);
+    const today = new Date();
+    let nextDate = new Date(today);
+    while (nextDate.getDay() !== targetDay) {
+      nextDate.setDate(nextDate.getDate() + 1);
+    }
+    const dataStr = nextDate.toISOString().split("T")[0];
+    horarioApi.disponiveis(parseInt(form.barbeiroId), dataStr)
+      .then((r) => {
+        // Show all slots for the day (not just available ones), since mensalista needs any valid slot
+        const allSlots = [...(r.data.horariosDisponiveis || []), ...(r.data.horariosOcupados || [])].sort();
+        // Remove duplicates
+        setHorariosDisponiveis(Array.from(new Set(allSlots)));
+      })
+      .catch(() => setHorariosDisponiveis([]))
+      .finally(() => setLoadingHorarios(false));
+  }, [form.dia, form.barbeiroId]);
+
   const handleCriar = async () => {
     if (!form.nome || !form.numero || !form.valor || !form.dia) {
       toast.error("Preencha todos os campos");
@@ -81,10 +117,12 @@ export default function Mensalistas() {
         valor: parseFloat(form.valor),
         dia: parseInt(form.dia),
         tipo: parseInt(form.tipo) as 1 | 2,
+        horario: form.horario || undefined,
+        barbeiroId: form.barbeiroId ? parseInt(form.barbeiroId) : undefined,
       });
       toast.success("Mensalista cadastrado!");
       setDialogOpen(false);
-      setForm({ nome: "", numero: "", valor: "", dia: "", tipo: "1" });
+      setForm({ nome: "", numero: "", valor: "", dia: "", tipo: "1", barbeiroId: "", horario: "" });
       fetchMensalistas();
     } catch (err: any) {
       toast.error(err.response?.data || "Erro ao cadastrar mensalista");
@@ -254,6 +292,43 @@ export default function Mensalistas() {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Barbeiro</Label>
+                <Select value={form.barbeiroId} onValueChange={(v) => setForm({ ...form, barbeiroId: v, horario: "" })}>
+                  <SelectTrigger className="h-10 bg-input border-border text-sm">
+                    <SelectValue placeholder="Selecione o barbeiro" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {barbeiros.map((b) => (
+                      <SelectItem key={b.id} value={String(b.id)}>{b.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {form.dia && form.barbeiroId && (
+                <div className="space-y-1">
+                  <Label className="text-xs">Horário do Corte</Label>
+                  {loadingHorarios ? (
+                    <div className="flex items-center gap-2 h-10 text-xs text-muted-foreground">
+                      <Loader2 className="w-3 h-3 animate-spin" /> Carregando horários...
+                    </div>
+                  ) : horariosDisponiveis.length > 0 ? (
+                    <Select value={form.horario} onValueChange={(v) => setForm({ ...form, horario: v })}>
+                      <SelectTrigger className="h-10 bg-input border-border text-sm">
+                        <SelectValue placeholder="Selecione o horário" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {horariosDisponiveis.map((h) => (
+                          <SelectItem key={h} value={h}>{h}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">Nenhum horário disponível para este dia/barbeiro</p>
+                  )}
+                  <p className="text-[10px] text-muted-foreground">Os agendamentos serão gerados automaticamente para o mês atual e próximo</p>
+                </div>
+              )}
               <Button onClick={handleCriar} disabled={creating} className="w-full h-10 gold-gradient text-background text-sm">
                 {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : "Cadastrar Mensalista"}
               </Button>
@@ -371,6 +446,18 @@ export default function Mensalistas() {
                           <Phone className="w-3 h-3 text-primary" />
                           {formatNumero(m.numero)}
                         </div>
+                        {m.nomeBarbeiro && (
+                          <div className="flex items-center gap-2">
+                            <User className="w-3 h-3 text-primary" />
+                            {m.nomeBarbeiro}
+                          </div>
+                        )}
+                        {m.horario && (
+                          <div className="flex items-center gap-2">
+                            <Clock className="w-3 h-3 text-primary" />
+                            {m.horario}
+                          </div>
+                        )}
                         <div className="flex items-center gap-2">
                           <Scissors className="w-3 h-3 text-primary" />
                           <span className="font-medium text-foreground">
