@@ -226,7 +226,7 @@ export default function CorteAtual() {
                       <p className="font-display text-lg font-bold text-primary">R$ {total.toFixed(2)}</p>
                       {valorAdicionais > 0 && (
                         <p className="text-[10px] text-muted-foreground">
-                          Servi\u00e7o: R$ {valorServico.toFixed(2)} + Adicionais: R$ {valorAdicionais.toFixed(2)}
+                          Serviço: R$ {valorServico.toFixed(2)} + Adicionais: R$ {valorAdicionais.toFixed(2)}
                         </p>
                       )}
                     </div>
