@@ -1,6 +1,6 @@
 /*
- * Design: Vintage Barbershop — Ver Próximo Agendamento (sem login)
- * Fluxo: Informar número -> Receber código no WhatsApp -> Validar código -> Ver próximo agendamento
+ * Design: Vintage Barbershop — Meus Agendamentos (sem login)
+ * Fluxo: Informar número -> Receber código no WhatsApp -> Validar código -> Ver todos agendamentos pendentes -> Cancelar
  */
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -9,26 +9,37 @@ import { Label } from "@/components/ui/label";
 import { agendamentoApi } from "@/lib/api";
 import type { AgendamentoDetalheResponse } from "@/lib/types";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   ArrowLeft,
   Calendar,
   Clock,
-  DollarSign,
   Loader2,
   Phone,
   Scissors,
   User,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 
-type Step = "numero" | "codigo" | "resultado";
+type Step = "numero" | "codigo" | "agendamentos";
 
 export default function VerProximoAgendamento() {
   const [step, setStep] = useState<Step>("numero");
   const [numero, setNumero] = useState("");
   const [codigo, setCodigo] = useState("");
   const [loading, setLoading] = useState(false);
-  const [agendamento, setAgendamento] = useState<AgendamentoDetalheResponse | null>(null);
+  const [agendamentos, setAgendamentos] = useState<AgendamentoDetalheResponse[]>([]);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [cancelTarget, setCancelTarget] = useState<AgendamentoDetalheResponse | null>(null);
+  const [canceling, setCanceling] = useState(false);
 
   const formatNumero = (raw: string) => {
     const digits = raw.replace(/\D/g, "");
@@ -61,15 +72,12 @@ export default function VerProximoAgendamento() {
     }
     setLoading(true);
     try {
-      const res = await agendamentoApi.proximoAgendamentoPorNumero(numero, parseInt(codigo));
-      // Check if response has 'mensagem' field (no appointment found)
-      if (res.data && "mensagem" in res.data) {
-        setAgendamento(null);
+      const res = await agendamentoApi.pendentesPorNumero(numero, parseInt(codigo));
+      setAgendamentos(res.data);
+      if (res.data.length === 0) {
         toast.info("Nenhum agendamento pendente encontrado para este número");
-      } else {
-        setAgendamento(res.data);
       }
-      setStep("resultado");
+      setStep("agendamentos");
     } catch (err: any) {
       toast.error(err.response?.data || "Código inválido ou expirado");
     } finally {
@@ -77,36 +85,81 @@ export default function VerProximoAgendamento() {
     }
   };
 
+  const handleCancelar = async () => {
+    if (!cancelTarget) return;
+    setCanceling(true);
+    try {
+      await agendamentoApi.cancelarPorNumero({
+        agendamentoId: cancelTarget.id,
+        numero,
+        codigoConfirmacao: parseInt(codigo),
+      });
+      toast.success("Agendamento cancelado com sucesso!");
+      setCancelDialogOpen(false);
+      setCancelTarget(null);
+      setAgendamentos((prev) => prev.filter((a) => a.id !== cancelTarget.id));
+    } catch (err: any) {
+      toast.error(err.response?.data || "Erro ao cancelar agendamento");
+    } finally {
+      setCanceling(false);
+    }
+  };
+
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     return date.toLocaleDateString("pt-BR", {
-      weekday: "long",
+      weekday: "short",
       day: "2-digit",
-      month: "long",
+      month: "2-digit",
       year: "numeric",
-    });
-  };
-
-  const formatTime = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleTimeString("pt-BR", {
       hour: "2-digit",
       minute: "2-digit",
     });
   };
 
-  const calcularTotal = () => {
-    if (!agendamento) return 0;
-    const valorServico = agendamento.valorServico || 0;
-    const valorAdicionais = agendamento.adicionais?.reduce((sum, a) => sum + a.valor, 0) || 0;
-    return valorServico + valorAdicionais;
-  };
-
   return (
     <div className="max-w-md mx-auto px-4 py-6">
       <h1 className="text-lg font-display font-bold text-center mb-6">
-        Próximo Agendamento
+        Meus Agendamentos
       </h1>
+
+      {/* Cancel Confirmation Dialog */}
+      <Dialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+        <DialogContent className="bg-card border-border max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="font-display">Cancelar Agendamento</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Tem certeza que deseja cancelar este agendamento?
+              {cancelTarget && (
+                <span className="block mt-2 text-foreground font-medium">
+                  {cancelTarget.servico} com {cancelTarget.nomeBarbeiro} -{" "}
+                  {formatDate(cancelTarget.data)}
+                </span>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setCancelDialogOpen(false)}
+              className="h-10 text-sm border-border"
+            >
+              Voltar
+            </Button>
+            <Button
+              onClick={handleCancelar}
+              disabled={canceling}
+              className="h-10 text-sm bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+            >
+              {canceling ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                "Confirmar Cancelamento"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <AnimatePresence mode="wait">
         {step === "numero" && (
@@ -205,9 +258,9 @@ export default function VerProximoAgendamento() {
           </motion.div>
         )}
 
-        {step === "resultado" && (
+        {step === "agendamentos" && (
           <motion.div
-            key="resultado"
+            key="agendamentos"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
@@ -217,14 +270,14 @@ export default function VerProximoAgendamento() {
               onClick={() => {
                 setStep("numero");
                 setCodigo("");
-                setAgendamento(null);
+                setAgendamentos([]);
               }}
               className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               <ArrowLeft className="w-4 h-4" /> Voltar ao início
             </button>
 
-            {!agendamento ? (
+            {agendamentos.length === 0 ? (
               <div className="bg-card border border-border rounded-lg p-6 text-center">
                 <Calendar className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
                 <p className="text-sm text-muted-foreground">
@@ -232,96 +285,69 @@ export default function VerProximoAgendamento() {
                 </p>
               </div>
             ) : (
-              <div className="bg-card border border-border rounded-lg p-5 space-y-4">
-                <h2 className="text-sm font-display font-bold text-primary text-center">
-                  Seu Próximo Agendamento
-                </h2>
-
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                      <User className="w-4 h-4 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Barbeiro</p>
-                      <p className="text-sm font-medium">{agendamento.nomeBarbeiro}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Scissors className="w-4 h-4 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Serviço</p>
-                      <p className="text-sm font-medium">{agendamento.servico}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Calendar className="w-4 h-4 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Data</p>
-                      <p className="text-sm font-medium">{formatDate(agendamento.data)}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Clock className="w-4 h-4 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Horário</p>
-                      <p className="text-sm font-medium">{formatTime(agendamento.data)}</p>
-                    </div>
-                  </div>
-
-                  {agendamento.descricaoEtapa && (
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                        <Scissors className="w-4 h-4 text-primary" />
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">Etapa</p>
-                        <p className="text-sm font-medium">{agendamento.descricaoEtapa}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {agendamento.adicionais && agendamento.adicionais.length > 0 && (
-                    <div className="border-t border-border pt-3">
-                      <p className="text-xs text-muted-foreground mb-2">Adicionais</p>
-                      <div className="space-y-1">
-                        {agendamento.adicionais.map((a, i) => (
-                          <div key={i} className="flex justify-between text-sm">
-                            <span>{a.nome}</span>
-                            <span className="text-primary">R$ {a.valor.toFixed(2)}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="border-t border-border pt-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                        <DollarSign className="w-4 h-4 text-primary" />
-                      </div>
-                      <div className="flex-1">
-                        {agendamento.valorServico != null && (
-                          <p className="text-xs text-muted-foreground">
-                            Serviço: R$ {agendamento.valorServico.toFixed(2)}
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  Seus agendamentos pendentes ({agendamentos.length}):
+                </p>
+                {agendamentos.map((ag) => (
+                  <div
+                    key={ag.id}
+                    className="bg-card border border-border rounded-lg p-4 space-y-2"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Scissors className="w-3.5 h-3.5 text-primary shrink-0" />
+                          <span className="text-sm font-medium truncate">
+                            {ag.servico}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <User className="w-3 h-3 shrink-0" />
+                          <span>{ag.nomeBarbeiro}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+                          <Clock className="w-3 h-3 shrink-0" />
+                          <span>{formatDate(ag.data)}</span>
+                        </div>
+                        {ag.descricaoEtapa && (
+                          <p className="text-xs text-primary mt-1">
+                            Etapa: {ag.descricaoEtapa}
                           </p>
                         )}
-                        <p className="text-sm font-display font-bold text-primary">
-                          Total: R$ {calcularTotal().toFixed(2)}
-                        </p>
+                        {ag.adicionais && ag.adicionais.length > 0 && (
+                          <div className="mt-1">
+                            {ag.adicionais.map((a, i) => (
+                              <p key={i} className="text-xs text-muted-foreground">
+                                + {a.nome} (R$ {a.valor.toFixed(2)})
+                              </p>
+                            ))}
+                          </div>
+                        )}
+                        {ag.valorServico != null && (
+                          <p className="text-xs font-semibold text-primary mt-1">
+                            Total: R$ {(
+                              (ag.valorServico || 0) +
+                              (ag.adicionais?.reduce((sum, a) => sum + a.valor, 0) || 0)
+                            ).toFixed(2)}
+                          </p>
+                        )}
                       </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setCancelTarget(ag);
+                          setCancelDialogOpen(true);
+                        }}
+                        className="shrink-0 text-destructive border-destructive/50 hover:bg-destructive/10"
+                      >
+                        <X className="w-4 h-4 mr-1" />
+                        Cancelar
+                      </Button>
                     </div>
                   </div>
-                </div>
+                ))}
               </div>
             )}
           </motion.div>
