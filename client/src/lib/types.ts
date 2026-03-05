@@ -97,6 +97,12 @@ export interface AdicionalRequest {
 }
 
 export interface AdicionalDisponivel {
+  id?: number;
+  nome: string;
+  valor: number;
+}
+
+export interface AdicionalCriarRequest {
   nome: string;
   valor: number;
 }

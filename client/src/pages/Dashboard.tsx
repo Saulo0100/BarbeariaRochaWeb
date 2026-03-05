@@ -16,6 +16,7 @@ import {
   ClipboardList,
   AlertTriangle,
   Loader2,
+  PackagePlus,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -66,6 +67,7 @@ export default function Dashboard() {
     { href: "/servicos-admin", icon: ClipboardList, label: "Serviços", color: "text-orange-400" },
     { href: "/excecoes", icon: AlertTriangle, label: "Exceções", color: "text-red-400" },
     { href: "/mensalistas", icon: Calendar, label: "Mensalistas", color: "text-purple-400" },
+    { href: "/adicionais-admin", icon: PackagePlus, label: "Adicionais", color: "text-teal-400" },
   ];
 
   return (
