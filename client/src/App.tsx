@@ -25,6 +25,7 @@ import ServicosAdmin from "./pages/ServicosAdmin";
 import Excecoes from "./pages/Excecoes";
 import Mensalistas from "./pages/Mensalistas";
 import Relatorios from "./pages/Relatorios";
+import AdicionaisAdmin from "./pages/AdicionaisAdmin";
 import ConfirmarEmail from "./pages/ConfirmarEmail";
 import AgendarParaCliente from "./pages/AgendarParaCliente";
 import CancelarAgendamento from "./pages/CancelarAgendamento";
@@ -63,6 +64,7 @@ function Router() {
         <Route path="/usuarios" component={Usuarios} />
         <Route path="/servicos-admin" component={ServicosAdmin} />
         <Route path="/mensalistas" component={Mensalistas} />
+        <Route path="/adicionais-admin" component={AdicionaisAdmin} />
 
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />

@@ -1,5 +1,6 @@
 import axios from "axios";
 import type {
+  AdicionalCriarRequest,
   AdicionalDisponivel,
   AgendamentoCancelarPorNumeroRequest,
   AgendamentoCriarRequest,
@@ -356,6 +357,18 @@ export const relatorioApi = {
         DataFim: filtro?.dataFim || undefined,
       },
     }),
+};
+
+// ===== ADICIONAL =====
+export const adicionalApi = {
+  listar: () =>
+    api.get<AdicionalDisponivel[]>("/api/Adicional"),
+
+  criar: (data: AdicionalCriarRequest) =>
+    api.post("/api/Adicional", data),
+
+  deletar: (id: number) =>
+    api.delete(`/api/Adicional/${id}`),
 };
 
 // ===== HORÁRIO =====
