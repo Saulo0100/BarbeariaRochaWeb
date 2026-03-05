@@ -379,6 +379,11 @@ export const horarioApi = {
     api.get<string[]>("/api/horario/todos", {
       params: { data },
     }),
+
+  horariosMensalista: (barbeiroId: number, diaSemana: number) =>
+    api.get<string[]>("/api/horario/mensalista", {
+      params: { barbeiroId, diaSemana },
+    }),
 };
 
 export default api;
