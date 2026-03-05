@@ -49,6 +49,12 @@ export enum MensalistaTipo {
   Quinzenal = 2,
 }
 
+export enum PeriodoTrabalho {
+  DiaTodo = 1,
+  Manha = 2,
+  Tarde = 3,
+}
+
 // ===== RESPONSE MODELS =====
 export interface UsuarioDetalhesResponse {
   id: number;
@@ -152,6 +158,11 @@ export interface MensalistaResponse {
   cortesNoMes: number;
   atendimentosNoMes: number;
   cortes: MensalistaCorteResponse[];
+  horario?: string | null;
+  barbeiroId?: number | null;
+  nomeBarbeiro?: string | null;
+  servicoId?: number | null;
+  nomeServico?: string | null;
 }
 
 export interface PaginacaoResultado<T> {
@@ -208,6 +219,7 @@ export interface UsuarioCriarRequest {
   descricao: string;
   senha: string;
   porcentagem?: number;
+  periodoTrabalho?: number;
 }
 
 export interface UsuarioEditarRequest {
@@ -240,6 +252,9 @@ export interface MensalistaCriarRequest {
   valor: number;
   dia: number;
   tipo: MensalistaTipo;
+  horario?: string;
+  barbeiroId?: number;
+  servicoId?: number;
 }
 
 export interface MensalistaRegistrarCorteRequest {
