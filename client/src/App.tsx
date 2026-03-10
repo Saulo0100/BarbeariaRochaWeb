@@ -27,6 +27,7 @@ import Mensalistas from "./pages/Mensalistas";
 import Relatorios from "./pages/Relatorios";
 import AdicionaisAdmin from "./pages/AdicionaisAdmin";
 import ConfirmarEmail from "./pages/ConfirmarEmail";
+import RedefinirSenha from "./pages/RedefinirSenha";
 import AgendarParaCliente from "./pages/AgendarParaCliente";
 import CancelarAgendamento from "./pages/CancelarAgendamento";
 import VerProximoAgendamento from "./pages/VerProximoAgendamento";
@@ -40,6 +41,7 @@ function Router() {
         <Route path="/login" component={Login} />
         <Route path="/cadastro" component={Cadastro} />
         <Route path="/confirmar-email" component={ConfirmarEmail} />
+        <Route path="/redefinir-senha" component={RedefinirSenha} />
         <Route path="/agendar" component={Agendar} />
         <Route path="/cancelar-agendamento" component={CancelarAgendamento} />
         <Route path="/proximo-agendamento" component={VerProximoAgendamento} />

@@ -21,6 +21,7 @@ import type {
   HorariosOcupadosResponse,
   LoginRequest,
   EsqueceuSenhaRequest,
+  RedefinirSenhaRequest,
   MensalistaCriarRequest,
   MensalistaCorteResponse,
   MensalistaRegistrarCorteRequest,
@@ -106,6 +107,9 @@ export const authApi = {
 
   novaSenha: (novaSenha: string) =>
     api.patch(`/api/Autenticacao/NovaSenha?novaSenha=${encodeURIComponent(novaSenha)}`),
+
+  redefinirSenha: (data: RedefinirSenhaRequest) =>
+    api.post("/api/Autenticacao/RedefinirSenha", data),
 };
 
 // ===== TOKEN (Código de Confirmação) =====
