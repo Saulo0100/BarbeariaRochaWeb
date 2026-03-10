@@ -520,7 +520,7 @@ export default function AgendarParaCliente() {
                 <div className="space-y-3">
                   {!barbeariaAberta ? (
                     <p className="text-center text-muted-foreground text-sm py-4">
-                      Barbearia fechada neste dia
+                      Este barbeiro não vai atender neste dia
                     </p>
                   ) : horariosDisponiveis.length > 0 ? (
                     <>
