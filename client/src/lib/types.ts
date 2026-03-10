@@ -189,6 +189,11 @@ export interface EsqueceuSenhaRequest {
   email: string;
 }
 
+export interface RedefinirSenhaRequest {
+  token: string;
+  novaSenha: string;
+}
+
 export interface AgendamentoCriarRequest {
   barbeiroId: number;
   usuarioId?: number;
