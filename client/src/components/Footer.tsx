@@ -30,7 +30,7 @@ export default function Footer() {
             </div>
           </div>
           <a
-            href="https://wa.me/5541982543088"
+            href="https://wa.me/554198254308"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-start gap-3 p-2 -m-2 rounded-lg hover:bg-primary/10 transition-colors group cursor-pointer"
@@ -41,7 +41,7 @@ export default function Footer() {
                 Contato via WhatsApp
                 <ExternalLink className="w-3 h-3 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
               </p>
-              <p className="text-xs text-primary font-medium">(41) 98254-3088</p>
+              <p className="text-xs text-primary font-medium">(41) 99825-4308</p>
               <p className="text-[10px] text-muted-foreground mt-0.5">Toque para abrir o WhatsApp</p>
             </div>
           </a>
