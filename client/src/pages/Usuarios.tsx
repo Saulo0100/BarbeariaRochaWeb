@@ -114,13 +114,13 @@ export default function Usuarios() {
     try {
       await usuarioApi.criarComoAdmin(form);
       toast.success("Usuário criado com sucesso!");
-      setDialogOpen(false);
       setForm({ nome: "", numero: "", email: "", perfil: Perfil.Cliente, descricao: "", senha: "" });
       fetchUsuarios();
     } catch (err: any) {
       toast.error(err.response?.data || "Erro ao criar usuário");
     } finally {
       setCreating(false);
+      setDialogOpen(false);
     }
   };
 
