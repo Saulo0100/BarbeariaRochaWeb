@@ -21,6 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { ClipboardList, Plus, Loader2, Trash2, Clock } from "lucide-react";
 import { toast } from "sonner";
@@ -32,6 +33,8 @@ export default function ServicosAdmin() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [deleting, setDeleting] = useState<number | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<ServicoDetalhesResponse | null>(null);
 
   const [form, setForm] = useState({
     nome: "",
@@ -79,12 +82,14 @@ export default function ServicosAdmin() {
     }
   };
 
-  const handleDeletar = async (id: number) => {
-    if (!confirm("Deseja excluir este serviço?")) return;
-    setDeleting(id);
+  const handleDeletar = async () => {
+    if (!deleteTarget) return;
+    setDeleting(deleteTarget.id);
     try {
-      await servicoApi.deletar(id);
+      await servicoApi.deletar(deleteTarget.id);
       toast.success("Serviço excluído");
+      setDeleteDialogOpen(false);
+      setDeleteTarget(null);
       fetchServicos();
     } catch (err: any) {
       toast.error(err.response?.data || "Erro ao excluir");
@@ -182,7 +187,10 @@ export default function ServicosAdmin() {
                     R$ {s.valor.toFixed(2)}
                   </span>
                   <button
-                    onClick={() => handleDeletar(s.id)}
+                    onClick={() => {
+                      setDeleteTarget(s);
+                      setDeleteDialogOpen(true);
+                    }}
                     disabled={deleting === s.id}
                     className="p-1.5 text-muted-foreground hover:text-destructive transition-colors"
                   >
@@ -196,6 +204,34 @@ export default function ServicosAdmin() {
       ) : (
         <div className="text-center py-12 text-muted-foreground text-sm">Nenhum serviço cadastrado</div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="bg-card border-border max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="font-display">Excluir Serviço</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Deseja realmente excluir o serviço <strong>{deleteTarget?.nome}</strong>?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-2 mt-2">
+            <Button
+              onClick={handleDeletar}
+              disabled={deleting !== null}
+              className="flex-1 h-10 bg-destructive text-destructive-foreground hover:bg-destructive/90 text-sm"
+            >
+              {deleting !== null ? <Loader2 className="w-4 h-4 animate-spin" /> : "Confirmar Exclusão"}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+              className="h-10 text-sm border-border"
+            >
+              Cancelar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

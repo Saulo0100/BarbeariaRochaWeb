@@ -16,6 +16,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import {
   Scissors,
   User,
   Calendar,
@@ -47,6 +54,7 @@ export default function CorteAtual() {
   const [metodoPagamento, setMetodoPagamento] = useState<string>("");
   const [mode, setMode] = useState<"view" | "complete" | "edit">("view");
   const [markingNoShow, setMarkingNoShow] = useState(false);
+  const [noShowDialogOpen, setNoShowDialogOpen] = useState(false);
 
   const fetchCorteAtual = useCallback(() => {
     setLoading(true);
@@ -257,7 +265,7 @@ export default function CorteAtual() {
                   </div>
                   <Button
                     variant="outline"
-                    onClick={handleClienteFaltou}
+                    onClick={() => setNoShowDialogOpen(true)}
                     disabled={markingNoShow}
                     className="w-full h-10 border-amber-500/30 text-amber-400 hover:bg-amber-500/10 text-sm font-medium"
                   >
@@ -349,6 +357,37 @@ export default function CorteAtual() {
           </p>
         </div>
       )}
+
+      {/* No-Show Confirmation Dialog */}
+      <Dialog open={noShowDialogOpen} onOpenChange={setNoShowDialogOpen}>
+        <DialogContent className="bg-card border-border max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="font-display">Cliente Faltou</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Deseja realmente marcar que o cliente <strong>{corte?.nomeCliente}</strong> faltou?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-2 mt-2">
+            <Button
+              onClick={async () => {
+                setNoShowDialogOpen(false);
+                await handleClienteFaltou();
+              }}
+              disabled={markingNoShow}
+              className="flex-1 h-10 bg-amber-600 text-white hover:bg-amber-700 text-sm"
+            >
+              {markingNoShow ? <Loader2 className="w-4 h-4 animate-spin" /> : "Confirmar"}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setNoShowDialogOpen(false)}
+              className="h-10 text-sm border-border"
+            >
+              Cancelar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
