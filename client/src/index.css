@@ -40,8 +40,8 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  --color-gold: oklch(0.76 0.14 75);
-  --color-gold-dark: oklch(0.62 0.13 70);
+  --color-gold: var(--brand-primary);
+  --color-gold-dark: var(--brand-secondary);
   --color-leather: oklch(0.40 0.10 50);
   --color-warm-black: oklch(0.10 0.01 60);
   --font-display: "Playfair Display", Georgia, serif;
@@ -49,6 +49,10 @@
 }
 
 :root {
+  /* Brand colors — sobrescritas via JS pelo config/index.ts */
+  --brand-primary: oklch(0.76 0.14 75);
+  --brand-secondary: oklch(0.62 0.13 70);
+
   --radius: 0.5rem;
   --background: oklch(0.08 0.01 60);
   --foreground: oklch(0.92 0.02 75);
@@ -56,7 +60,7 @@
   --card-foreground: oklch(0.92 0.02 75);
   --popover: oklch(0.13 0.01 60);
   --popover-foreground: oklch(0.92 0.02 75);
-  --primary: oklch(0.76 0.14 75);
+  --primary: var(--brand-primary);
   --primary-foreground: oklch(0.08 0.01 60);
   --secondary: oklch(0.18 0.01 60);
   --secondary-foreground: oklch(0.85 0.03 75);
@@ -68,20 +72,20 @@
   --destructive-foreground: oklch(0.98 0 0);
   --border: oklch(0.24 0.02 65);
   --input: oklch(0.16 0.01 60);
-  --ring: oklch(0.76 0.14 75);
-  --chart-1: oklch(0.76 0.14 75);
-  --chart-2: oklch(0.62 0.13 70);
+  --ring: var(--brand-primary);
+  --chart-1: var(--brand-primary);
+  --chart-2: var(--brand-secondary);
   --chart-3: oklch(0.50 0.10 50);
   --chart-4: oklch(0.42 0.08 50);
   --chart-5: oklch(0.32 0.06 50);
   --sidebar: oklch(0.10 0.01 60);
   --sidebar-foreground: oklch(0.92 0.02 75);
-  --sidebar-primary: oklch(0.76 0.14 75);
+  --sidebar-primary: var(--brand-primary);
   --sidebar-primary-foreground: oklch(0.08 0.01 60);
   --sidebar-accent: oklch(0.18 0.01 60);
   --sidebar-accent-foreground: oklch(0.92 0.02 75);
   --sidebar-border: oklch(0.24 0.02 65);
-  --sidebar-ring: oklch(0.76 0.14 75);
+  --sidebar-ring: var(--brand-primary);
 }
 
 @layer base {
@@ -139,22 +143,22 @@
   }
 
   .gold-gradient {
-    background: linear-gradient(135deg, oklch(0.76 0.14 75), oklch(0.62 0.13 70));
+    background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
   }
 
   .gold-text {
-    background: linear-gradient(135deg, oklch(0.80 0.14 75), oklch(0.68 0.13 70));
+    background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
   .gold-border {
-    border-color: oklch(0.76 0.14 75 / 30%);
+    border-color: color-mix(in oklch, var(--brand-primary) 30%, transparent);
   }
 
   .vintage-shadow {
-    box-shadow: 0 4px 20px oklch(0 0 0 / 50%), 0 0 40px oklch(0.76 0.14 75 / 5%);
+    box-shadow: 0 4px 20px oklch(0 0 0 / 50%), 0 0 40px color-mix(in oklch, var(--brand-primary) 5%, transparent);
   }
 
   .barber-stripe {
@@ -182,7 +186,7 @@
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: oklch(0.76 0.14 75 / 50%);
+  background: color-mix(in oklch, var(--brand-primary) 50%, transparent);
 }
 
 /* Input autofill styling */

@@ -6,6 +6,7 @@
  */
 import { useAuth } from "@/contexts/AuthContext";
 import { useLocation, Link } from "wouter";
+import { appConfig } from "@/config";
 import {
   Home,
   Calendar,
@@ -91,9 +92,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="container flex items-center justify-between h-14">
           <Link href="/" className="flex items-center gap-2">
-            <img src="/logo-rocha.png" alt="Barbearia Rocha" className="w-8 h-8 rounded-full object-contain" />
+            <img src={appConfig.logo} alt={appConfig.nome} className="w-8 h-8 rounded-full object-contain" />
             <span className="font-display text-lg font-bold gold-text">
-              Barbearia Rocha
+              {appConfig.nome}
             </span>
           </Link>
 

@@ -2,6 +2,7 @@
  * Design: Vintage Barbershop — Footer
  */
 import { Scissors, MapPin, Phone, Clock, ExternalLink, MessageCircle } from "lucide-react";
+import { appConfig } from "@/config";
 
 export default function Footer() {
   return (
@@ -13,7 +14,7 @@ export default function Footer() {
             <Scissors className="w-4 h-4 text-background" />
           </div>
           <span className="font-display text-lg font-bold gold-text">
-            Barbearia Rocha
+            {appConfig.nome}
           </span>
         </div>
 
@@ -69,7 +70,7 @@ export default function Footer() {
 
         {/* Copyright */}
         <p className="text-[10px] text-muted-foreground/60 text-center">
-          Barbearia Rocha &copy; {new Date().getFullYear()} — Todos os direitos reservados
+          {appConfig.nome} &copy; {new Date().getFullYear()} — Todos os direitos reservados
         </p>
       </div>
     </footer>

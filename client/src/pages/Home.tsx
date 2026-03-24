@@ -10,8 +10,7 @@ import { useEffect, useState } from "react";
 import { servicoApi, usuarioApi } from "@/lib/api";
 import type { ServicoDetalhesResponse, BarbeirosDetalhesResponse } from "@/lib/types";
 import { useAuth } from "@/contexts/AuthContext";
-
-const LOGO_IMG = "/logo-rocha.png";
+import { appConfig } from "@/config";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -50,7 +49,7 @@ export default function Home() {
       {/* Hero Section */}
       <section className="relative h-[70vh] min-h-[480px] overflow-hidden bg-background">
         <div className="absolute inset-0 flex items-center justify-center opacity-30">
-          <img src={LOGO_IMG} alt="Barbearia Rocha" className="w-full h-full object-contain" />
+          <img src={appConfig.logo} alt={appConfig.nome} className="w-full h-full object-contain" />
         </div>
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/20" />
 
@@ -68,9 +67,7 @@ export default function Home() {
               custom={1}
               className="font-display text-4xl sm:text-5xl font-bold leading-tight"
             >
-              <span className="gold-text">Barbearia</span>
-              <br />
-              Rocha
+              <span className="gold-text">{appConfig.nome}</span>
             </motion.h1>
             <motion.p
               variants={fadeUp}
@@ -176,7 +173,7 @@ export default function Home() {
       {/* About / CTA Section */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 flex items-center justify-center opacity-10">
-          <img src={LOGO_IMG} alt="" className="w-full h-full object-contain" />
+          <img src={appConfig.logo} alt={appConfig.nome} className="w-full h-full object-contain" />
         </div>
         <div className="relative container py-12 text-center">
           <h2 className="font-display text-2xl font-bold mb-3">
