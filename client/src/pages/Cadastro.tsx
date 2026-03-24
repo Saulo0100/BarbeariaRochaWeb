@@ -13,8 +13,7 @@ import { Eye, EyeOff, Loader2, ArrowLeft, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
-
-const LOGO_IMG = "/logo-rocha.png";
+import { appConfig } from "@/config";
 
 export default function Cadastro() {
   const [, setLocation] = useLocation();
@@ -86,7 +85,7 @@ export default function Cadastro() {
         </Link>
 
         <div className="flex justify-center mb-4">
-          <img src={LOGO_IMG} alt="Barbearia Rocha" className="w-14 h-14 rounded-full object-contain" />
+          <img src={appConfig.logo} alt={appConfig.nome} className="w-14 h-14 rounded-full object-contain" />
         </div>
 
         {sucesso ? (

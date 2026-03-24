@@ -8,8 +8,7 @@ import { Button } from "@/components/ui/button";
 import { usuarioApi } from "@/lib/api";
 import { Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { motion } from "framer-motion";
-
-const LOGO_IMG = "/logo-rocha.png";
+import { appConfig } from "@/config";
 
 export default function ConfirmarEmail() {
   const [, setLocation] = useLocation();
@@ -47,7 +46,7 @@ export default function ConfirmarEmail() {
         className="text-center space-y-6"
       >
         <div className="flex justify-center mb-4">
-          <img src={LOGO_IMG} alt="Barbearia Rocha" className="w-16 h-16 rounded-full object-contain" />
+          <img src={appConfig.logo} alt={appConfig.nome} className="w-16 h-16 rounded-full object-contain" />
         </div>
 
         {status === "loading" && (

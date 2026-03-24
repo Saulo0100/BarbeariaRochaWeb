@@ -470,7 +470,7 @@ export default function Relatorios() {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{c.nomeCliente}</p>
                   <p className="text-xs text-muted-foreground">
-                    {c.totalAtendimentos} atendimentos • {formatCurrency(c.totalGasto)}
+                    {c.totalAtendimentos} atendimentos
                   </p>
                 </div>
                 {c.ultimoAtendimento && (

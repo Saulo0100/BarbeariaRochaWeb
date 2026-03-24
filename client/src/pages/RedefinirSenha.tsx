@@ -11,8 +11,7 @@ import { authApi } from "@/lib/api";
 import { Eye, EyeOff, Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-
-const LOGO_IMG = "/logo-rocha.png";
+import { appConfig } from "@/config";
 
 export default function RedefinirSenha() {
   const [, setLocation] = useLocation();
@@ -70,7 +69,7 @@ export default function RedefinirSenha() {
           className="text-center space-y-6"
         >
           <div className="flex justify-center mb-4">
-            <img src={LOGO_IMG} alt="Barbearia Rocha" className="w-16 h-16 rounded-full object-contain" />
+            <img src={appConfig.logo} alt={appConfig.nome} className="w-16 h-16 rounded-full object-contain" />
           </div>
           <div className="w-16 h-16 mx-auto rounded-full bg-destructive/10 flex items-center justify-center">
             <XCircle className="w-8 h-8 text-destructive" />
@@ -93,11 +92,11 @@ export default function RedefinirSenha() {
     <div className="min-h-[calc(100vh-7.5rem)]">
       <div className="relative h-40 overflow-hidden">
         <div className="absolute inset-0 flex items-center justify-center opacity-20">
-          <img src={LOGO_IMG} alt="" className="w-full h-full object-contain" />
+          <img src={appConfig.logo} alt="" className="w-full h-full object-contain" />
         </div>
         <div className="absolute inset-0 bg-gradient-to-b from-background/40 to-background" />
         <div className="absolute bottom-4 left-0 right-0 flex justify-center">
-          <img src={LOGO_IMG} alt="Barbearia Rocha" className="w-16 h-16 rounded-full object-contain vintage-shadow" />
+          <img src={appConfig.logo} alt={appConfig.nome} className="w-16 h-16 rounded-full object-contain vintage-shadow" />
         </div>
       </div>
 

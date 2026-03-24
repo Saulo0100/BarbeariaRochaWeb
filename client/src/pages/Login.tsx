@@ -13,8 +13,7 @@ import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { authApi } from "@/lib/api";
-
-const LOGO_IMG = "/logo-rocha.png";
+import { appConfig } from "@/config";
 
 export default function Login() {
   const { login } = useAuth();
@@ -74,11 +73,11 @@ export default function Login() {
       {/* Top image accent */}
       <div className="relative h-40 overflow-hidden">
         <div className="absolute inset-0 flex items-center justify-center opacity-20">
-          <img src={LOGO_IMG} alt="" className="w-full h-full object-contain" />
+          <img src={appConfig.logo} alt="" className="w-full h-full object-contain" />
         </div>
         <div className="absolute inset-0 bg-gradient-to-b from-background/40 to-background" />
         <div className="absolute bottom-4 left-0 right-0 flex justify-center">
-          <img src={LOGO_IMG} alt="Barbearia Rocha" className="w-16 h-16 rounded-full object-contain vintage-shadow" />
+          <img src={appConfig.logo} alt={appConfig.nome} className="w-16 h-16 rounded-full object-contain vintage-shadow" />
         </div>
       </div>
 

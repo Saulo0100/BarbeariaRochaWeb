@@ -11,7 +11,7 @@ const configs: Record<string, AppConfig> = {
   "cliente-b": clienteB,
 };
 
-const clientKey = import.meta.env.VITE_CLIENT ?? "barbearia-rocha";
+const clientKey = import.meta.env.VITE_CLIENT;
 
 if (!(clientKey in configs)) {
   throw new Error(
