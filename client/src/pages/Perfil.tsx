@@ -90,32 +90,36 @@ export default function Perfil() {
                 {user.nome.charAt(0)}
               </div>
             )}
-            <label
-              htmlFor="foto-upload"
-              className="absolute bottom-2 right-0 w-7 h-7 rounded-full bg-primary flex items-center justify-center cursor-pointer hover:bg-primary/80 transition-colors shadow-md"
-            >
-              <Camera className="w-3.5 h-3.5 text-background" />
-            </label>
-            <input
-              id="foto-upload"
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (!file) return;
-                if (file.size > 2 * 1024 * 1024) {
-                  toast.error("A imagem deve ter no máximo 2MB");
-                  return;
-                }
-                setFotoFile(file);
-                const reader = new FileReader();
-                reader.onloadend = () => setFotoPreview(reader.result as string);
-                reader.readAsDataURL(file);
-              }}
-            />
+            {isBarbeiro && (
+              <label
+                htmlFor="foto-upload"
+                className="absolute bottom-2 right-0 w-7 h-7 rounded-full bg-primary flex items-center justify-center cursor-pointer hover:bg-primary/80 transition-colors shadow-md"
+              >
+                <Camera className="w-3.5 h-3.5 text-background" />
+              </label>
+            )}
+            {isBarbeiro && (
+              <input
+                id="foto-upload"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  if (file.size > 2 * 1024 * 1024) {
+                    toast.error("A imagem deve ter no máximo 2MB");
+                    return;
+                  }
+                  setFotoFile(file);
+                  const reader = new FileReader();
+                  reader.onloadend = () => setFotoPreview(reader.result as string);
+                  reader.readAsDataURL(file);
+                }}
+              />
+            )}
           </div>
-          {fotoFile && (
+          {isBarbeiro && fotoFile && (
             <Button
               onClick={async () => {
                 setSavingFoto(true);
