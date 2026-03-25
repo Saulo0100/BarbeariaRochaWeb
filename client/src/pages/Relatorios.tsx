@@ -95,7 +95,7 @@ export default function Relatorios() {
   const buildFiltro = (): RelatorioFiltroRequest => {
     const filtro: RelatorioFiltroRequest = {};
     const now = new Date();
-
+    now.setDate(now.getDate() -1)
     if (periodo === "hoje") {
       filtro.dataInicio = now.toISOString().split("T")[0];
       filtro.dataFim = now.toISOString().split("T")[0];
