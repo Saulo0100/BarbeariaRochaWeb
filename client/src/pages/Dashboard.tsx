@@ -61,6 +61,7 @@ export default function Dashboard() {
 
   const quickLinks = [
     ...(isBarbeiroAdmin ? [{ href: "/corte-atual", icon: Scissors, label: "Corte Atual", color: "text-yellow-400" }] : []),
+    ...(isBarbeiroAdmin ? [{ href: "/horario-funcionamento", icon: Clock, label: "Horário", color: "text-sky-400" }] : []),
     { href: "/agendamentos", icon: CalendarCheck, label: "Agendamentos", color: "text-emerald-400" },
     { href: "/relatorios", icon: TrendingUp, label: "Relatórios", color: "text-amber-400" },
     { href: "/usuarios", icon: Users, label: "Usuários", color: "text-blue-400" },

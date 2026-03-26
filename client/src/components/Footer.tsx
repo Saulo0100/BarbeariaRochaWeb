@@ -1,10 +1,80 @@
 /*
  * Design: Vintage Barbershop — Footer
  */
-import { Scissors, MapPin, Phone, Clock, ExternalLink, MessageCircle } from "lucide-react";
+import { Scissors, MapPin, Clock, ExternalLink, MessageCircle } from "lucide-react";
 import { appConfig } from "@/config";
+import { useEffect, useState } from "react";
+import { configuracaoHorarioApi } from "@/lib/api";
+import type { ConfiguracaoHorarioResponse } from "@/lib/types";
+
+const SHORT_DAY: Record<string, string> = {
+  "Domingo": "Dom",
+  "Segunda-feira": "Seg",
+  "Terça-feira": "Ter",
+  "Quarta-feira": "Qua",
+  "Quinta-feira": "Qui",
+  "Sexta-feira": "Sex",
+  "Sábado": "Sáb",
+};
+
+function formatTime(time: string): string {
+  return time ? time.substring(0, 5) : "";
+}
+
+interface HorarioGroup {
+  label: string;
+  aberto: boolean;
+  horaInicio: string;
+  horaFim: string;
+}
+
+function groupHorarios(horarios: ConfiguracaoHorarioResponse[]): HorarioGroup[] {
+  const order = [1, 2, 3, 4, 5, 6, 0];
+  const sorted = order
+    .map((d) => horarios.find((h) => h.diaSemana === d))
+    .filter(Boolean) as ConfiguracaoHorarioResponse[];
+
+  const groups: Array<{ nomes: string[]; aberto: boolean; horaInicio: string; horaFim: string }> = [];
+
+  for (const h of sorted) {
+    const key = h.aberto ? `${h.horaInicio}-${h.horaFim}` : "fechado";
+    const last = groups[groups.length - 1];
+    if (last) {
+      const lastKey = last.aberto ? `${last.horaInicio}-${last.horaFim}` : "fechado";
+      if (lastKey === key) {
+        last.nomes.push(SHORT_DAY[h.nomeDia] ?? h.nomeDia);
+        continue;
+      }
+    }
+    groups.push({
+      nomes: [SHORT_DAY[h.nomeDia] ?? h.nomeDia],
+      aberto: h.aberto,
+      horaInicio: h.horaInicio,
+      horaFim: h.horaFim,
+    });
+  }
+
+  return groups.map((g) => ({
+    label:
+      g.nomes.length === 1
+        ? g.nomes[0]
+        : `${g.nomes[0]} - ${g.nomes[g.nomes.length - 1]}`,
+    aberto: g.aberto,
+    horaInicio: g.horaInicio,
+    horaFim: g.horaFim,
+  }));
+}
 
 export default function Footer() {
+  const [grupos, setGrupos] = useState<HorarioGroup[]>([]);
+
+  useEffect(() => {
+    configuracaoHorarioApi
+      .listar()
+      .then((r) => setGrupos(groupHorarios(r.data)))
+      .catch(() => {});
+  }, []);
+
   return (
     <footer className="bg-card border-t border-border py-8 mb-16">
       <div className="container max-w-sm mx-auto">
@@ -24,10 +94,23 @@ export default function Footer() {
             <Clock className="w-4 h-4 text-primary mt-0.5 shrink-0" />
             <div>
               <p className="font-medium text-foreground text-xs">Horário de Funcionamento</p>
-              <p className="text-xs">Seg: 13:20 - 20:00</p>
-              <p className="text-xs">Ter - Sex: 10:00 - 20:00</p>
-              <p className="text-xs">Sáb: 09:00 - 17:20</p>
-              <p className="text-xs">Dom: Fechado</p>
+              {grupos.length > 0 ? (
+                grupos.map((g) => (
+                  <p key={g.label} className="text-xs">
+                    {g.label}:{" "}
+                    {g.aberto
+                      ? `${formatTime(g.horaInicio)} - ${formatTime(g.horaFim)}`
+                      : "Fechado"}
+                  </p>
+                ))
+              ) : (
+                <>
+                  <p className="text-xs">Seg: 13:20 - 20:00</p>
+                  <p className="text-xs">Ter - Sex: 10:00 - 20:00</p>
+                  <p className="text-xs">Sáb: 09:00 - 17:20</p>
+                  <p className="text-xs">Dom: Fechado</p>
+                </>
+              )}
             </div>
           </div>
           <a

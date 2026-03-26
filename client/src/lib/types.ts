@@ -403,6 +403,29 @@ export interface ExcecaoFiltroRequest {
   barbeiroId?: number;
 }
 
+// ===== CONFIGURAÇÃO HORÁRIO =====
+export interface ConfiguracaoHorarioResponse {
+  id: number;
+  diaSemana: number;
+  nomeDia: string;
+  aberto: boolean;
+  horaInicio: string;
+  almocoInicio: string;
+  almocoFim: string;
+  horaFim: string;
+  intervaloMinutos: number;
+}
+
+export interface ConfiguracaoHorarioSalvarRequest {
+  diaSemana: number;
+  aberto: boolean;
+  horaInicio: string;
+  almocoInicio: string;
+  almocoFim: string;
+  horaFim: string;
+  intervaloMinutos: number;
+}
+
 // ===== HELPER TYPES =====
 export interface PaginacaoFiltro<T> {
   pagina: number;

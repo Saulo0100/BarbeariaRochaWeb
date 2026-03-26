@@ -31,6 +31,7 @@ import RedefinirSenha from "./pages/RedefinirSenha";
 import AgendarParaCliente from "./pages/AgendarParaCliente";
 import CancelarAgendamento from "./pages/CancelarAgendamento";
 import VerProximoAgendamento from "./pages/VerProximoAgendamento";
+import ConfiguracaoHorario from "./pages/ConfiguracaoHorario";
 
 function Router() {
   return (
@@ -60,6 +61,9 @@ function Router() {
 
         {/* Barbeiro + Admin */}
         <Route path="/relatorios" component={Relatorios} />
+
+        {/* BarbeiroAdministrador */}
+        <Route path="/horario-funcionamento" component={ConfiguracaoHorario} />
 
         {/* Admin */}
         <Route path="/dashboard" component={Dashboard} />

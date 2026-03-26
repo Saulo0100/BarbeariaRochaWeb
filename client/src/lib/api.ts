@@ -11,6 +11,8 @@ import type {
   AgendamentoFiltroRequest,
   BarbeirosDetalhesResponse,
   ClienteFrequenteResponse,
+  ConfiguracaoHorarioResponse,
+  ConfiguracaoHorarioSalvarRequest,
   ExcecaoCriarRequest,
   ExcecaoDetalhesResponse,
   ExcecaoFiltroRequest,
@@ -401,6 +403,21 @@ export const horarioApi = {
     api.get<string[]>("/api/horario/mensalista", {
       params: { barbeiroId, diaSemana },
     }),
+};
+
+// ===== CONFIGURAÇÃO HORÁRIO =====
+export const configuracaoHorarioApi = {
+  listar: () =>
+    api.get<ConfiguracaoHorarioResponse[]>("/api/configuracao-horario"),
+
+  obterPorDia: (diaSemana: number) =>
+    api.get<ConfiguracaoHorarioResponse>(`/api/configuracao-horario/${diaSemana}`),
+
+  salvar: (data: ConfiguracaoHorarioSalvarRequest) =>
+    api.put("/api/configuracao-horario", data),
+
+  salvarTodos: (data: ConfiguracaoHorarioSalvarRequest[]) =>
+    api.put("/api/configuracao-horario/todos", data),
 };
 
 export default api;
