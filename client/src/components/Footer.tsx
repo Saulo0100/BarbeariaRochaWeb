@@ -119,7 +119,7 @@ export default function Footer() {
 
   const enderecoLinha2 = barbearia?.cidade
     ? `${barbearia.cidade}${barbearia.estado ? ` - ${barbearia.estado}` : ""}${barbearia.cep ? `, ${barbearia.cep}` : ""}`
-    : "São José dos Pinhais - PR, 83055-050";
+    : "";
 
   return (
     <footer className="bg-card border-t border-border py-8 mb-16">
