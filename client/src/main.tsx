@@ -8,4 +8,11 @@ const root = document.documentElement;
 root.style.setProperty("--brand-primary", appConfig.tema.primaryColor);
 root.style.setProperty("--brand-secondary", appConfig.tema.secondaryColor);
 
+// Define título e favicon da aba conforme o cliente configurado
+document.title = appConfig.nome;
+const favicon = document.createElement("link");
+favicon.rel = "icon";
+favicon.href = appConfig.logo;
+document.head.appendChild(favicon);
+
 createRoot(document.getElementById("root")!).render(<App />);
