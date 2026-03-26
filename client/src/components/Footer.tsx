@@ -4,8 +4,8 @@
 import { Scissors, MapPin, Clock, ExternalLink, MessageCircle } from "lucide-react";
 import { appConfig } from "@/config";
 import { useEffect, useState } from "react";
-import { configuracaoHorarioApi } from "@/lib/api";
-import type { ConfiguracaoHorarioResponse } from "@/lib/types";
+import { configuracaoHorarioApi, configuracaoBarbeariaApi } from "@/lib/api";
+import type { ConfiguracaoHorarioResponse, ConfiguracaoBarbeariaResponse } from "@/lib/types";
 
 const SHORT_DAY: Record<string, string> = {
   "Domingo": "Dom",
@@ -19,6 +19,14 @@ const SHORT_DAY: Record<string, string> = {
 
 function formatTime(time: string): string {
   return time ? time.substring(0, 5) : "";
+}
+
+function maskPhone(value: string): string {
+  const digits = value.replace(/\D/g, "").slice(0, 11);
+  if (digits.length === 0) return "";
+  if (digits.length <= 2) return `(${digits}`;
+  if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
 }
 
 interface HorarioGroup {
@@ -65,15 +73,53 @@ function groupHorarios(horarios: ConfiguracaoHorarioResponse[]): HorarioGroup[] 
   }));
 }
 
+function buildWhatsAppUrl(numero: string): string {
+  const digits = numero.replace(/\D/g, "");
+  return `https://wa.me/${digits.startsWith("55") ? digits : `55${digits}`}`;
+}
+
+function buildMapsUrl(barbearia: ConfiguracaoBarbeariaResponse): string {
+  const parts = [barbearia.rua, barbearia.bairro, barbearia.cidade, barbearia.estado, barbearia.cep]
+    .filter(Boolean)
+    .join(", ");
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(parts)}`;
+}
+
 export default function Footer() {
   const [grupos, setGrupos] = useState<HorarioGroup[]>([]);
+  const [barbearia, setBarbearia] = useState<ConfiguracaoBarbeariaResponse | null>(null);
 
   useEffect(() => {
     configuracaoHorarioApi
       .listar()
       .then((r) => setGrupos(groupHorarios(r.data)))
       .catch(() => {});
+
+    configuracaoBarbeariaApi
+      .obter()
+      .then((r) => setBarbearia(r.data))
+      .catch(() => {});
   }, []);
+
+  const whatsappUrl = barbearia?.numeroCelular
+    ? buildWhatsAppUrl(barbearia.numeroCelular)
+    : "https://wa.me/554198254308";
+
+  const whatsappDisplay = barbearia?.numeroCelular
+    ? maskPhone(barbearia.numeroCelular)
+    : "Informação não cadastrada";
+
+  const mapsUrl = barbearia
+    ? buildMapsUrl(barbearia)
+    : "https://www.google.com/maps/search/?api=1&query=R.+La%C3%A9rte+Fenelon,+670+-+Ip%C3%AA,+S%C3%A3o+Jos%C3%A9+dos+Pinhais+-+PR,+83055-050";
+
+  const enderecoLinha1 = barbearia?.rua
+    ? `${barbearia.rua}${barbearia.bairro ? ` - ${barbearia.bairro}` : ""}`
+    : "Informação não cadastrada";
+
+  const enderecoLinha2 = barbearia?.cidade
+    ? `${barbearia.cidade}${barbearia.estado ? ` - ${barbearia.estado}` : ""}${barbearia.cep ? `, ${barbearia.cep}` : ""}`
+    : "São José dos Pinhais - PR, 83055-050";
 
   return (
     <footer className="bg-card border-t border-border py-8 mb-16">
@@ -113,8 +159,9 @@ export default function Footer() {
               )}
             </div>
           </div>
+
           <a
-            href="https://wa.me/554198254308"
+            href={whatsappUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-start gap-3 p-2 -m-2 rounded-lg hover:bg-primary/10 transition-colors group cursor-pointer"
@@ -125,12 +172,13 @@ export default function Footer() {
                 Contato via WhatsApp
                 <ExternalLink className="w-3 h-3 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
               </p>
-              <p className="text-xs text-primary font-medium">(41) 99825-4308</p>
+              <p className="text-xs text-primary font-medium">{whatsappDisplay}</p>
               <p className="text-[10px] text-muted-foreground mt-0.5">Toque para abrir o WhatsApp</p>
             </div>
           </a>
+
           <a
-            href="https://www.google.com/maps/search/?api=1&query=R.+La%C3%A9rte+Fenelon,+670+-+Ip%C3%AA,+S%C3%A3o+Jos%C3%A9+dos+Pinhais+-+PR,+83055-050"
+            href={mapsUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-start gap-3 p-2 -m-2 rounded-lg hover:bg-primary/10 transition-colors group cursor-pointer"
@@ -141,8 +189,8 @@ export default function Footer() {
                 Localização
                 <ExternalLink className="w-3 h-3 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
               </p>
-              <p className="text-xs">R. Laérte Fenelon, 670 - Ipê</p>
-              <p className="text-xs">São José dos Pinhais - PR, 83055-050</p>
+              <p className="text-xs">{enderecoLinha1}</p>
+              <p className="text-xs">{enderecoLinha2}</p>
               <p className="text-[10px] text-muted-foreground mt-0.5">Toque para abrir no Google Maps</p>
             </div>
           </a>

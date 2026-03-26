@@ -11,6 +11,8 @@ import type {
   AgendamentoFiltroRequest,
   BarbeirosDetalhesResponse,
   ClienteFrequenteResponse,
+  ConfiguracaoBarbeariaResponse,
+  ConfiguracaoBarbeariaRequest,
   ConfiguracaoHorarioResponse,
   ConfiguracaoHorarioSalvarRequest,
   ExcecaoCriarRequest,
@@ -403,6 +405,21 @@ export const horarioApi = {
     api.get<string[]>("/api/horario/mensalista", {
       params: { barbeiroId, diaSemana },
     }),
+};
+
+// ===== CONFIGURAÇÃO BARBEARIA =====
+export const configuracaoBarbeariaApi = {
+  obter: () =>
+    api.get<ConfiguracaoBarbeariaResponse>("/api/configuracao-barbearia"),
+
+  criar: (data: ConfiguracaoBarbeariaRequest) =>
+    api.post<ConfiguracaoBarbeariaResponse>("/api/configuracao-barbearia", data),
+
+  atualizar: (id: number, data: ConfiguracaoBarbeariaRequest) =>
+    api.put<ConfiguracaoBarbeariaResponse>(`/api/configuracao-barbearia/${id}`, data),
+
+  deletar: (id: number) =>
+    api.delete(`/api/configuracao-barbearia/${id}`),
 };
 
 // ===== CONFIGURAÇÃO HORÁRIO =====

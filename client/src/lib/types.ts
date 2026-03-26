@@ -403,6 +403,26 @@ export interface ExcecaoFiltroRequest {
   barbeiroId?: number;
 }
 
+// ===== CONFIGURAÇÃO BARBEARIA =====
+export interface ConfiguracaoBarbeariaResponse {
+  id: number;
+  numeroCelular: string | null;
+  rua: string | null;
+  bairro: string | null;
+  cidade: string | null;
+  estado: string | null;
+  cep: string | null;
+}
+
+export interface ConfiguracaoBarbeariaRequest {
+  numeroCelular: string;
+  rua: string;
+  bairro: string;
+  cidade: string;
+  estado: string;
+  cep: string;
+}
+
 // ===== CONFIGURAÇÃO HORÁRIO =====
 export interface ConfiguracaoHorarioResponse {
   id: number;
