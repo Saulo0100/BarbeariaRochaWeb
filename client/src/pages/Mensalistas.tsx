@@ -474,7 +474,7 @@ export default function Mensalistas() {
                         </div>
                         <div className="flex items-center gap-2">
                           <Calendar className="w-3 h-3 text-primary" />
-                          {m.dia.charAt(0).toUpperCase() + m.dia.slice(1)}
+                          {m.dia ? m.dia.charAt(0).toUpperCase() + m.dia.slice(1) : "Automático"}
                         </div>
                         <div className="flex items-center gap-2">
                           <Phone className="w-3 h-3 text-primary" />
