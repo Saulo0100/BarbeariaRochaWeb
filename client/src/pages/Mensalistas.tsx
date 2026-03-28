@@ -24,7 +24,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { TrendingUp, Plus, Loader2, Trash2, DollarSign, Calendar, Scissors, ChevronDown, ChevronUp, Phone, Clock, User } from "lucide-react";
+import { TrendingUp, Plus, Loader2, Trash2, DollarSign, Calendar, Scissors, ChevronDown, ChevronUp, Phone, Clock, User, Zap } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -56,6 +57,7 @@ export default function Mensalistas() {
     tipo: "1",
     barbeiroId: "",
     horario: "",
+    agendamentosAutomaticos: false,
   });
 
   const fetchMensalistas = useCallback(() => {
@@ -103,8 +105,12 @@ export default function Mensalistas() {
   }, [form.dia, form.barbeiroId, mensalistas]);
 
   const handleCriar = async () => {
-    if (!form.nome || !form.numero || !form.valor || !form.dia) {
-      toast.error("Preencha todos os campos");
+    if (!form.nome || !form.numero || !form.valor) {
+      toast.error("Preencha todos os campos obrigatórios");
+      return;
+    }
+    if (!form.agendamentosAutomaticos && !form.dia) {
+      toast.error("Selecione o dia da semana");
       return;
     }
     setCreating(true);
@@ -113,14 +119,15 @@ export default function Mensalistas() {
         nome: form.nome,
         numero: form.numero.replace(/\D/g, ""),
         valor: parseFloat(form.valor),
-        dia: parseInt(form.dia),
+        dia: form.agendamentosAutomaticos ? undefined : parseInt(form.dia),
         tipo: parseInt(form.tipo) as 1 | 2,
-        horario: form.horario || undefined,
+        horario: form.agendamentosAutomaticos ? undefined : (form.horario || undefined),
         barbeiroId: form.barbeiroId ? parseInt(form.barbeiroId) : undefined,
+        agendamentosAutomaticos: form.agendamentosAutomaticos,
       });
       toast.success("Mensalista cadastrado!");
       setDialogOpen(false);
-      setForm({ nome: "", numero: "", valor: "", dia: "", tipo: "1", barbeiroId: "", horario: "" });
+      setForm({ nome: "", numero: "", valor: "", dia: "", tipo: "1", barbeiroId: "", horario: "", agendamentosAutomaticos: false });
       fetchMensalistas();
     } catch (err: any) {
       toast.error(err.response?.data || "Erro ao cadastrar mensalista");
@@ -245,7 +252,7 @@ export default function Mensalistas() {
                 <Input
                   value={formatNumero(form.numero)}
                   onChange={(e) => setForm({ ...form, numero: e.target.value.replace(/\D/g, "") })}
-                  maxLength={15} // se estiver formatado (ex: "(41) 99999-9999")
+                  maxLength={15}
                   placeholder="(41) 99999-9999"
                   className="h-10 bg-input border-border text-sm"
                 />
@@ -262,34 +269,41 @@ export default function Mensalistas() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs">Dia da semana</Label>
-                  <Select value={form.dia} onValueChange={(v) => setForm({ ...form, dia: v })}>
+                  <Label className="text-xs">Tipo</Label>
+                  <Select value={form.tipo} onValueChange={(v) => setForm({ ...form, tipo: v })}>
                     <SelectTrigger className="h-10 bg-input border-border text-sm">
-                      <SelectValue placeholder="Selecione" />
+                      <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1">Segunda-feira</SelectItem>
-                      <SelectItem value="2">Terça-feira</SelectItem>
-                      <SelectItem value="3">Quarta-feira</SelectItem>
-                      <SelectItem value="4">Quinta-feira</SelectItem>
-                      <SelectItem value="5">Sexta-feira</SelectItem>
-                      <SelectItem value="6">Sábado</SelectItem>
+                      <SelectItem value="1">Mensal</SelectItem>
+                      <SelectItem value="2">Quinzenal</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
-              <div className="space-y-1">
-                <Label className="text-xs">Tipo</Label>
-                <Select value={form.tipo} onValueChange={(v) => setForm({ ...form, tipo: v })}>
-                  <SelectTrigger className="h-10 bg-input border-border text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">Mensal</SelectItem>
-                    <SelectItem value="2">Quinzenal</SelectItem>
-                  </SelectContent>
-                </Select>
+
+              {/* Checkbox agendamentos automáticos */}
+              <div className="flex items-start gap-3 p-3 bg-primary/5 border border-primary/20 rounded-lg">
+                <Checkbox
+                  id="agendamentosAutomaticos"
+                  checked={form.agendamentosAutomaticos}
+                  onCheckedChange={(checked) =>
+                    setForm({ ...form, agendamentosAutomaticos: !!checked, dia: "", horario: "" })
+                  }
+                  className="mt-0.5"
+                />
+                <label htmlFor="agendamentosAutomaticos" className="cursor-pointer">
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <Zap className="w-3.5 h-3.5 text-primary" />
+                    <span className="text-xs font-medium">Agendamentos automáticos</span>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">
+                    Os agendamentos serão gerados automaticamente sem dia e horário fixos
+                  </p>
+                </label>
               </div>
+
+              {/* Barbeiro */}
               <div className="space-y-1">
                 <Label className="text-xs">Barbeiro</Label>
                 <Select value={form.barbeiroId} onValueChange={(v) => setForm({ ...form, barbeiroId: v, horario: "" })}>
@@ -303,30 +317,52 @@ export default function Mensalistas() {
                   </SelectContent>
                 </Select>
               </div>
-              {form.dia && form.barbeiroId && (
-                <div className="space-y-1">
-                  <Label className="text-xs">Horário do Corte</Label>
-                  {loadingHorarios ? (
-                    <div className="flex items-center gap-2 h-10 text-xs text-muted-foreground">
-                      <Loader2 className="w-3 h-3 animate-spin" /> Carregando horários...
-                    </div>
-                  ) : horariosDisponiveis.length > 0 ? (
-                    <Select value={form.horario} onValueChange={(v) => setForm({ ...form, horario: v })}>
+
+              {/* Dia + Horário — ocultos quando agendamentos automáticos */}
+              {!form.agendamentosAutomaticos && (
+                <>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Dia da semana</Label>
+                    <Select value={form.dia} onValueChange={(v) => setForm({ ...form, dia: v, horario: "" })}>
                       <SelectTrigger className="h-10 bg-input border-border text-sm">
-                        <SelectValue placeholder="Selecione o horário" />
+                        <SelectValue placeholder="Selecione" />
                       </SelectTrigger>
                       <SelectContent>
-                        {horariosDisponiveis.map((h) => (
-                          <SelectItem key={h} value={h}>{h}</SelectItem>
-                        ))}
+                        <SelectItem value="1">Segunda-feira</SelectItem>
+                        <SelectItem value="2">Terça-feira</SelectItem>
+                        <SelectItem value="3">Quarta-feira</SelectItem>
+                        <SelectItem value="4">Quinta-feira</SelectItem>
+                        <SelectItem value="5">Sexta-feira</SelectItem>
+                        <SelectItem value="6">Sábado</SelectItem>
                       </SelectContent>
                     </Select>
-                  ) : (
-                    <p className="text-xs text-muted-foreground">Nenhum horário disponível para este dia/barbeiro</p>
+                  </div>
+                  {form.dia && form.barbeiroId && (
+                    <div className="space-y-1">
+                      <Label className="text-xs">Horário do Corte</Label>
+                      {loadingHorarios ? (
+                        <div className="flex items-center gap-2 h-10 text-xs text-muted-foreground">
+                          <Loader2 className="w-3 h-3 animate-spin" /> Carregando horários...
+                        </div>
+                      ) : horariosDisponiveis.length > 0 ? (
+                        <Select value={form.horario} onValueChange={(v) => setForm({ ...form, horario: v })}>
+                          <SelectTrigger className="h-10 bg-input border-border text-sm">
+                            <SelectValue placeholder="Selecione o horário" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {horariosDisponiveis.map((h) => (
+                              <SelectItem key={h} value={h}>{h}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <p className="text-xs text-muted-foreground">Nenhum horário disponível para este dia/barbeiro</p>
+                      )}
+                    </div>
                   )}
-                  <p className="text-[10px] text-muted-foreground">Os agendamentos serão gerados automaticamente para o mês atual e próximo</p>
-                </div>
+                </>
               )}
+
               <Button onClick={handleCriar} disabled={creating} className="w-full h-10 gold-gradient text-background text-sm">
                 {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : "Cadastrar Mensalista"}
               </Button>

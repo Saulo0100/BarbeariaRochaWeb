@@ -59,6 +59,16 @@ async function fetchViaCep(cep: string): Promise<ViaCepResponse> {
 
 type DayState = ConfiguracaoHorarioResponse & { saving: boolean };
 
+const DEFAULT_DAYS: ConfiguracaoHorarioResponse[] = [
+  { id: 0, diaSemana: 1, nomeDia: "Segunda-feira",  aberto: false, horaInicio: "08:00", almocoInicio: "12:00", almocoFim: "13:00", horaFim: "18:00", intervaloMinutos: 30 },
+  { id: 0, diaSemana: 2, nomeDia: "Terça-feira",    aberto: false, horaInicio: "08:00", almocoInicio: "12:00", almocoFim: "13:00", horaFim: "18:00", intervaloMinutos: 30 },
+  { id: 0, diaSemana: 3, nomeDia: "Quarta-feira",   aberto: false, horaInicio: "08:00", almocoInicio: "12:00", almocoFim: "13:00", horaFim: "18:00", intervaloMinutos: 30 },
+  { id: 0, diaSemana: 4, nomeDia: "Quinta-feira",   aberto: false, horaInicio: "08:00", almocoInicio: "12:00", almocoFim: "13:00", horaFim: "18:00", intervaloMinutos: 30 },
+  { id: 0, diaSemana: 5, nomeDia: "Sexta-feira",    aberto: false, horaInicio: "08:00", almocoInicio: "12:00", almocoFim: "13:00", horaFim: "18:00", intervaloMinutos: 30 },
+  { id: 0, diaSemana: 6, nomeDia: "Sábado",         aberto: false, horaInicio: "08:00", almocoInicio: "12:00", almocoFim: "13:00", horaFim: "18:00", intervaloMinutos: 30 },
+  { id: 0, diaSemana: 0, nomeDia: "Domingo",        aberto: false, horaInicio: "08:00", almocoInicio: "12:00", almocoFim: "13:00", horaFim: "18:00", intervaloMinutos: 30 },
+];
+
 const NAO_CADASTRADO = "Informação não cadastrada";
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -127,13 +137,17 @@ export default function ConfiguracoesEstabelecimento() {
     configuracaoHorarioApi
       .listar()
       .then((r) => {
+        const source = r.data.length > 0 ? r.data : DEFAULT_DAYS;
         const order = [1, 2, 3, 4, 5, 6, 0];
         const sorted = order
-          .map((d) => r.data.find((h) => h.diaSemana === d))
+          .map((d) => source.find((h) => h.diaSemana === d))
           .filter(Boolean) as ConfiguracaoHorarioResponse[];
         setDias(sorted.map((d) => ({ ...d, saving: false })));
       })
-      .catch(() => toast.error("Erro ao carregar horários"))
+      .catch(() => {
+        setDias(DEFAULT_DAYS.map((d) => ({ ...d, saving: false })));
+        toast.error("Erro ao carregar horários — exibindo configuração padrão");
+      })
       .finally(() => setLoadingHorario(false));
   }, []);
 

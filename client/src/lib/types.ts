@@ -261,11 +261,12 @@ export interface MensalistaCriarRequest {
   nome: string;
   numero: string;
   valor: number;
-  dia: number;
+  dia?: number;
   tipo: MensalistaTipo;
   horario?: string;
   barbeiroId?: number;
   servicoId?: number;
+  agendamentosAutomaticos?: boolean;
 }
 
 export interface MensalistaRegistrarCorteRequest {

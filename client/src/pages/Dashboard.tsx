@@ -58,10 +58,11 @@ export default function Dashboard() {
   }, []);
 
   const isBarbeiroAdmin = isPerfil("barbeiroadministrador");
+  const isAdmin = isPerfil("administrador");
 
   const quickLinks = [
-    ...(isBarbeiroAdmin ? [{ href: "/corte-atual", icon: Scissors, label: "Corte Atual", color: "text-yellow-400" }] : []),
-    ...(isBarbeiroAdmin ? [{ href: "/configuracoes-estabelecimento", icon: Clock, label: "Configurações", color: "text-sky-400" }] : []),
+    ...((isBarbeiroAdmin || isAdmin) ? [{ href: "/corte-atual", icon: Scissors, label: "Corte Atual", color: "text-yellow-400" }] : []),
+    ...((isBarbeiroAdmin || isAdmin) ? [{ href: "/configuracoes-estabelecimento", icon: Clock, label: "Configurações", color: "text-sky-400" }] : []),
     { href: "/agendamentos", icon: CalendarCheck, label: "Agendamentos", color: "text-emerald-400" },
     { href: "/relatorios", icon: TrendingUp, label: "Relatórios", color: "text-amber-400" },
     { href: "/usuarios", icon: Users, label: "Usuários", color: "text-blue-400" },
