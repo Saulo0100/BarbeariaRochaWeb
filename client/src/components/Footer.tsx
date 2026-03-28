@@ -151,10 +151,7 @@ export default function Footer() {
                 ))
               ) : (
                 <>
-                  <p className="text-xs">Seg: 13:20 - 20:00</p>
-                  <p className="text-xs">Ter - Sex: 10:00 - 20:00</p>
-                  <p className="text-xs">Sáb: 09:00 - 17:20</p>
-                  <p className="text-xs">Dom: Fechado</p>
+                  <p className="text-xs">Informação não cadastrada</p>
                 </>
               )}
             </div>
