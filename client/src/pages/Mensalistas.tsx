@@ -119,9 +119,9 @@ export default function Mensalistas() {
         nome: form.nome,
         numero: form.numero.replace(/\D/g, ""),
         valor: parseFloat(form.valor),
-        dia: form.agendamentosAutomaticos ? undefined : parseInt(form.dia),
+        dia: form.agendamentosAutomaticos ? parseInt(form.dia) : undefined,
         tipo: parseInt(form.tipo) as 1 | 2,
-        horario: form.agendamentosAutomaticos ? undefined : (form.horario || undefined),
+        horario: form.agendamentosAutomaticos ? (form.horario || undefined) : undefined,
         barbeiroId: form.barbeiroId ? parseInt(form.barbeiroId) : undefined,
         agendamentosAutomaticos: form.agendamentosAutomaticos,
       });
