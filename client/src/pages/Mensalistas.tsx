@@ -109,7 +109,7 @@ export default function Mensalistas() {
       toast.error("Preencha todos os campos obrigatórios");
       return;
     }
-    if (!form.agendamentosAutomaticos && !form.dia) {
+    if (form.agendamentosAutomaticos && !form.dia) {
       toast.error("Selecione o dia da semana");
       return;
     }
@@ -298,7 +298,7 @@ export default function Mensalistas() {
                     <span className="text-xs font-medium">Agendamentos automáticos</span>
                   </div>
                   <p className="text-[10px] text-muted-foreground">
-                    Os agendamentos serão gerados automaticamente sem dia e horário fixos
+                    Os agendamentos serão gerados automaticamente com o dia e horários informados.
                   </p>
                 </label>
               </div>
@@ -318,8 +318,8 @@ export default function Mensalistas() {
                 </Select>
               </div>
 
-              {/* Dia + Horário — ocultos quando agendamentos automáticos */}
-              {!form.agendamentosAutomaticos && (
+              {/* Dia + Horário — aparecem apenas quando agendamentos automáticos está ativo */}
+              {form.agendamentosAutomaticos && (
                 <>
                   <div className="space-y-1">
                     <Label className="text-xs">Dia da semana</Label>

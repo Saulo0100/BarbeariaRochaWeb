@@ -53,7 +53,7 @@ const perfilColors: Record<number, string> = {
 
 export default function Usuarios() {
   const { isPerfil } = useAuth();
-  const isBarbeiroAdmin = isPerfil("barbeiroadministrador");
+  const isAdministrador = isPerfil("administrador");
   const [usuarios, setUsuarios] = useState<UsuarioListarResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [pagina, setPagina] = useState(1);
@@ -214,12 +214,11 @@ export default function Usuarios() {
                   <SelectContent>
                     <SelectItem value="1">Cliente</SelectItem>
                     <SelectItem value="2">Barbeiro</SelectItem>
-                    {!isBarbeiroAdmin && <SelectItem value="3">Administrador</SelectItem>}
-                    {!isBarbeiroAdmin && <SelectItem value="4">Barbeiro Administrador</SelectItem>}
+                    {isAdministrador && <SelectItem value="3">Barbeiro Administrador</SelectItem>}
                   </SelectContent>
                 </Select>
               </div>
-              {(form.perfil === Perfil.Barbeiro || form.perfil === Perfil.BarbeiroAdministrador) && (
+              {(form.perfil === Perfil.Barbeiro || form.perfil === Perfil.Administrador) && (
                 <>
                   <div className="space-y-1">
                     <Label className="text-xs">Agenda</Label>
