@@ -4,11 +4,17 @@
  * Seções: Informações (WhatsApp + endereço) e Horário de Funcionamento
  */
 import { useEffect, useState } from "react";
-import { Settings, Clock, Phone, MapPin, Loader2, Save, Search } from "lucide-react";
+import { Settings, Clock, Phone, MapPin, Loader2, Save, Search, Pencil, CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { configuracaoBarbeariaApi, configuracaoHorarioApi } from "@/lib/api";
 import type {
@@ -59,15 +65,29 @@ async function fetchViaCep(cep: string): Promise<ViaCepResponse> {
 
 type DayState = ConfiguracaoHorarioResponse & { saving: boolean };
 
+/** 7 dias padrão usados como base — mesclados com os dados da API */
 const DEFAULT_DAYS: ConfiguracaoHorarioResponse[] = [
-  { id: 0, diaSemana: 1, nomeDia: "Segunda-feira",  aberto: false, horaInicio: "08:00", almocoInicio: "12:00", almocoFim: "13:00", horaFim: "18:00", intervaloMinutos: 30 },
-  { id: 0, diaSemana: 2, nomeDia: "Terça-feira",    aberto: false, horaInicio: "08:00", almocoInicio: "12:00", almocoFim: "13:00", horaFim: "18:00", intervaloMinutos: 30 },
-  { id: 0, diaSemana: 3, nomeDia: "Quarta-feira",   aberto: false, horaInicio: "08:00", almocoInicio: "12:00", almocoFim: "13:00", horaFim: "18:00", intervaloMinutos: 30 },
-  { id: 0, diaSemana: 4, nomeDia: "Quinta-feira",   aberto: false, horaInicio: "08:00", almocoInicio: "12:00", almocoFim: "13:00", horaFim: "18:00", intervaloMinutos: 30 },
-  { id: 0, diaSemana: 5, nomeDia: "Sexta-feira",    aberto: false, horaInicio: "08:00", almocoInicio: "12:00", almocoFim: "13:00", horaFim: "18:00", intervaloMinutos: 30 },
-  { id: 0, diaSemana: 6, nomeDia: "Sábado",         aberto: false, horaInicio: "08:00", almocoInicio: "12:00", almocoFim: "13:00", horaFim: "18:00", intervaloMinutos: 30 },
-  { id: 0, diaSemana: 0, nomeDia: "Domingo",        aberto: false, horaInicio: "08:00", almocoInicio: "12:00", almocoFim: "13:00", horaFim: "18:00", intervaloMinutos: 30 },
+  { id: 0, diaSemana: 1, nomeDia: "Segunda-feira", aberto: false, horaInicio: "08:00", almocoInicio: "12:00", almocoFim: "13:00", horaFim: "18:00", intervaloMinutos: 30 },
+  { id: 0, diaSemana: 2, nomeDia: "Terça-feira",   aberto: false, horaInicio: "08:00", almocoInicio: "12:00", almocoFim: "13:00", horaFim: "18:00", intervaloMinutos: 30 },
+  { id: 0, diaSemana: 3, nomeDia: "Quarta-feira",  aberto: false, horaInicio: "08:00", almocoInicio: "12:00", almocoFim: "13:00", horaFim: "18:00", intervaloMinutos: 30 },
+  { id: 0, diaSemana: 4, nomeDia: "Quinta-feira",  aberto: false, horaInicio: "08:00", almocoInicio: "12:00", almocoFim: "13:00", horaFim: "18:00", intervaloMinutos: 30 },
+  { id: 0, diaSemana: 5, nomeDia: "Sexta-feira",   aberto: false, horaInicio: "08:00", almocoInicio: "12:00", almocoFim: "13:00", horaFim: "18:00", intervaloMinutos: 30 },
+  { id: 0, diaSemana: 6, nomeDia: "Sábado",        aberto: false, horaInicio: "08:00", almocoInicio: "12:00", almocoFim: "13:00", horaFim: "18:00", intervaloMinutos: 30 },
+  { id: 0, diaSemana: 0, nomeDia: "Domingo",       aberto: false, horaInicio: "08:00", almocoInicio: "12:00", almocoFim: "13:00", horaFim: "18:00", intervaloMinutos: 30 },
 ];
+
+/** Mescla os dados da API com os 7 dias padrão, na ordem Seg→Dom */
+function mergeDays(apiDays: ConfiguracaoHorarioResponse[]): ConfiguracaoHorarioResponse[] {
+  const order = [1, 2, 3, 4, 5, 6, 0];
+  return order.map((d) => {
+    const fromApi = apiDays.find((h) => h.diaSemana === d);
+    return fromApi ?? DEFAULT_DAYS.find((h) => h.diaSemana === d)!;
+  });
+}
+
+function formatTime(t: string) {
+  return t ? t.substring(0, 5) : "--:--";
+}
 
 const NAO_CADASTRADO = "Informação não cadastrada";
 
@@ -82,8 +102,8 @@ export default function ConfiguracoesEstabelecimento() {
 
   const [form, setForm] = useState({
     numeroCelular: "",
-    logradouro: "",   // rua sem número (auto-preenchido pelo ViaCEP)
-    numero: "",       // número do imóvel (digitado pelo usuário)
+    logradouro: "",
+    numero: "",
     bairro: "",
     cidade: "",
     estado: "",
@@ -93,7 +113,10 @@ export default function ConfiguracoesEstabelecimento() {
   // --- Horário state ---
   const [dias, setDias] = useState<DayState[]>([]);
   const [loadingHorario, setLoadingHorario] = useState(true);
-  const [savingAll, setSavingAll] = useState(false);
+
+  // Modal de edição de dia
+  const [diaEditando, setDiaEditando] = useState<DayState | null>(null);
+  const [savingDia, setSavingDia] = useState(false);
 
   // --- Load data ---
   useEffect(() => {
@@ -101,15 +124,10 @@ export default function ConfiguracoesEstabelecimento() {
       .obter()
       .then((r) => {
         setBarbearia(r.data);
-
-        // Separa rua + número: "R. Laérte Fenelon, 670" → logradouro + numero
         const ruaCompleta = r.data.rua ?? "";
         const lastComma = ruaCompleta.lastIndexOf(",");
-        const logradouro =
-          lastComma !== -1 ? ruaCompleta.slice(0, lastComma).trim() : ruaCompleta;
-        const numero =
-          lastComma !== -1 ? ruaCompleta.slice(lastComma + 1).trim() : "";
-
+        const logradouro = lastComma !== -1 ? ruaCompleta.slice(0, lastComma).trim() : ruaCompleta;
+        const numero = lastComma !== -1 ? ruaCompleta.slice(lastComma + 1).trim() : "";
         setForm({
           numeroCelular: maskPhone(r.data.numeroCelular ?? ""),
           logradouro,
@@ -121,7 +139,6 @@ export default function ConfiguracoesEstabelecimento() {
         });
       })
       .catch(() => {
-        // API retornou exception: preenche campos com mensagem padrão
         setForm({
           numeroCelular: NAO_CADASTRADO,
           logradouro: NAO_CADASTRADO,
@@ -137,45 +154,27 @@ export default function ConfiguracoesEstabelecimento() {
     configuracaoHorarioApi
       .listar()
       .then((r) => {
-        const source = r.data.length > 0 ? r.data : DEFAULT_DAYS;
-        const order = [1, 2, 3, 4, 5, 6, 0];
-        const sorted = order
-          .map((d) => source.find((h) => h.diaSemana === d))
-          .filter(Boolean) as ConfiguracaoHorarioResponse[];
-        setDias(sorted.map((d) => ({ ...d, saving: false })));
+        setDias(mergeDays(r.data).map((d) => ({ ...d, saving: false })));
       })
       .catch(() => {
-        setDias(DEFAULT_DAYS.map((d) => ({ ...d, saving: false })));
+        setDias(mergeDays([]).map((d) => ({ ...d, saving: false })));
         toast.error("Erro ao carregar horários — exibindo configuração padrão");
       })
       .finally(() => setLoadingHorario(false));
   }, []);
 
-  // --- CEP auto-complete ---
+  // --- CEP ---
   const handleBuscarCep = async () => {
     const digits = form.cep.replace(/\D/g, "");
-    if (digits.length !== 8) {
-      toast.error("Digite um CEP válido com 8 dígitos");
-      return;
-    }
+    if (digits.length !== 8) { toast.error("Digite um CEP válido com 8 dígitos"); return; }
     setBuscandoCep(true);
     try {
       const data = await fetchViaCep(digits);
-      setForm((f) => ({
-        ...f,
-        logradouro: data.logradouro,
-        bairro: data.bairro,
-        cidade: data.localidade,
-        estado: data.uf,
-      }));
-    } catch {
-      toast.error("CEP não encontrado");
-    } finally {
-      setBuscandoCep(false);
-    }
+      setForm((f) => ({ ...f, logradouro: data.logradouro, bairro: data.bairro, cidade: data.localidade, estado: data.uf }));
+    } catch { toast.error("CEP não encontrado"); }
+    finally { setBuscandoCep(false); }
   };
 
-  // Dispara busca automaticamente quando CEP atingir 8 dígitos
   const handleCepChange = async (value: string) => {
     const masked = maskCep(value);
     setForm((f) => ({ ...f, cep: masked }));
@@ -183,28 +182,15 @@ export default function ConfiguracoesEstabelecimento() {
       setBuscandoCep(true);
       try {
         const data = await fetchViaCep(masked);
-        setForm((f) => ({
-          ...f,
-          cep: masked,
-          logradouro: data.logradouro,
-          bairro: data.bairro,
-          cidade: data.localidade,
-          estado: data.uf,
-        }));
-      } catch {
-        toast.error("CEP não encontrado");
-      } finally {
-        setBuscandoCep(false);
-      }
+        setForm((f) => ({ ...f, cep: masked, logradouro: data.logradouro, bairro: data.bairro, cidade: data.localidade, estado: data.uf }));
+      } catch { toast.error("CEP não encontrado"); }
+      finally { setBuscandoCep(false); }
     }
   };
 
   // --- Barbearia save ---
   const handleSalvarBarbearia = async () => {
-    const ruaCompleta = form.numero
-      ? `${form.logradouro}, ${form.numero}`
-      : form.logradouro;
-
+    const ruaCompleta = form.numero ? `${form.logradouro}, ${form.numero}` : form.logradouro;
     const payload = {
       numeroCelular: unmaskedPhone(form.numeroCelular),
       rua: ruaCompleta,
@@ -213,7 +199,6 @@ export default function ConfiguracoesEstabelecimento() {
       estado: form.estado,
       cep: form.cep.replace(/\D/g, ""),
     };
-
     setSavingBarbearia(true);
     try {
       if (barbearia?.id) {
@@ -231,54 +216,35 @@ export default function ConfiguracoesEstabelecimento() {
     }
   };
 
-  // --- Horário handlers ---
-  const updateDia = (diaSemana: number, changes: Partial<DayState>) => {
-    setDias((prev) =>
-      prev.map((d) => (d.diaSemana === diaSemana ? { ...d, ...changes } : d))
-    );
-  };
-
-  const handleSalvarDia = async (dia: DayState) => {
-    updateDia(dia.diaSemana, { saving: true });
+  // --- Horário modal ---
+  const handleSalvarDia = async () => {
+    if (!diaEditando) return;
+    setSavingDia(true);
     try {
       await configuracaoHorarioApi.salvar({
-        diaSemana: dia.diaSemana,
-        aberto: dia.aberto,
-        horaInicio: dia.horaInicio,
-        almocoInicio: dia.almocoInicio,
-        almocoFim: dia.almocoFim,
-        horaFim: dia.horaFim,
-        intervaloMinutos: dia.intervaloMinutos,
+        diaSemana: diaEditando.diaSemana,
+        aberto: diaEditando.aberto,
+        horaInicio: diaEditando.horaInicio,
+        almocoInicio: diaEditando.almocoInicio,
+        almocoFim: diaEditando.almocoFim,
+        horaFim: diaEditando.horaFim,
+        intervaloMinutos: diaEditando.intervaloMinutos,
       });
-      toast.success(`${dia.nomeDia} salvo com sucesso`);
+      // Atualiza o dia na lista
+      setDias((prev) =>
+        prev.map((d) => (d.diaSemana === diaEditando.diaSemana ? { ...diaEditando, saving: false } : d))
+      );
+      toast.success(`${diaEditando.nomeDia} salvo com sucesso`);
+      setDiaEditando(null);
     } catch (err: any) {
       toast.error(err.response?.data || "Erro ao salvar");
     } finally {
-      updateDia(dia.diaSemana, { saving: false });
+      setSavingDia(false);
     }
   };
 
-  const handleSalvarTodos = async () => {
-    setSavingAll(true);
-    try {
-      await configuracaoHorarioApi.salvarTodos(
-        dias.map((d) => ({
-          diaSemana: d.diaSemana,
-          aberto: d.aberto,
-          horaInicio: d.horaInicio,
-          almocoInicio: d.almocoInicio,
-          almocoFim: d.almocoFim,
-          horaFim: d.horaFim,
-          intervaloMinutos: d.intervaloMinutos,
-        }))
-      );
-      toast.success("Todos os horários salvos com sucesso");
-    } catch (err: any) {
-      toast.error(err.response?.data || "Erro ao salvar");
-    } finally {
-      setSavingAll(false);
-    }
-  };
+  const updateEditando = (changes: Partial<DayState>) =>
+    setDiaEditando((prev) => (prev ? { ...prev, ...changes } : prev));
 
   return (
     <div className="container py-6 max-w-lg space-y-8">
@@ -304,32 +270,24 @@ export default function ConfiguracoesEstabelecimento() {
           </div>
         ) : (
           <div className="bg-card border border-border rounded-lg p-4 space-y-4">
-            {/* WhatsApp */}
             <div className="space-y-1">
               <Label className="text-xs text-muted-foreground">WhatsApp</Label>
               <Input
                 type="tel"
                 placeholder="(41) 99999-9999"
                 value={form.numeroCelular}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, numeroCelular: maskPhone(e.target.value) }))
-                }
-                onFocus={(e) => {
-                  if (e.target.value === NAO_CADASTRADO)
-                    setForm((f) => ({ ...f, numeroCelular: "" }));
-                }}
+                onChange={(e) => setForm((f) => ({ ...f, numeroCelular: maskPhone(e.target.value) }))}
+                onFocus={(e) => { if (e.target.value === NAO_CADASTRADO) setForm((f) => ({ ...f, numeroCelular: "" })); }}
                 className="h-9 bg-input border-border text-sm"
               />
             </div>
 
-            {/* Endereço */}
             <div className="flex items-center gap-2 pt-1">
               <MapPin className="w-3.5 h-3.5 text-primary" />
               <span className="text-xs font-medium text-muted-foreground">Endereço</span>
             </div>
 
             <div className="space-y-3">
-              {/* CEP */}
               <div className="space-y-1">
                 <Label className="text-xs text-muted-foreground">CEP</Label>
                 <div className="flex gap-2">
@@ -337,10 +295,7 @@ export default function ConfiguracoesEstabelecimento() {
                     placeholder="00000-000"
                     value={form.cep}
                     onChange={(e) => handleCepChange(e.target.value)}
-                    onFocus={(e) => {
-                      if (e.target.value === NAO_CADASTRADO)
-                        setForm((f) => ({ ...f, cep: "" }));
-                    }}
+                    onFocus={(e) => { if (e.target.value === NAO_CADASTRADO) setForm((f) => ({ ...f, cep: "" })); }}
                     className="h-9 bg-input border-border text-sm"
                   />
                   <Button
@@ -351,16 +306,11 @@ export default function ConfiguracoesEstabelecimento() {
                     onClick={handleBuscarCep}
                     disabled={buscandoCep}
                   >
-                    {buscandoCep ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Search className="w-4 h-4" />
-                    )}
+                    {buscandoCep ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
                   </Button>
                 </div>
               </div>
 
-              {/* Logradouro + Número */}
               <div className="grid grid-cols-3 gap-3">
                 <div className="col-span-2 space-y-1">
                   <Label className="text-xs text-muted-foreground">Rua</Label>
@@ -368,10 +318,7 @@ export default function ConfiguracoesEstabelecimento() {
                     placeholder="Auto-preenchido pelo CEP"
                     value={form.logradouro}
                     onChange={(e) => setForm((f) => ({ ...f, logradouro: e.target.value }))}
-                    onFocus={(e) => {
-                      if (e.target.value === NAO_CADASTRADO)
-                        setForm((f) => ({ ...f, logradouro: "" }));
-                    }}
+                    onFocus={(e) => { if (e.target.value === NAO_CADASTRADO) setForm((f) => ({ ...f, logradouro: "" })); }}
                     className="h-9 bg-input border-border text-sm"
                   />
                 </div>
@@ -386,7 +333,6 @@ export default function ConfiguracoesEstabelecimento() {
                 </div>
               </div>
 
-              {/* Bairro + Cidade */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <Label className="text-xs text-muted-foreground">Bairro</Label>
@@ -394,10 +340,7 @@ export default function ConfiguracoesEstabelecimento() {
                     placeholder="Auto-preenchido"
                     value={form.bairro}
                     onChange={(e) => setForm((f) => ({ ...f, bairro: e.target.value }))}
-                    onFocus={(e) => {
-                      if (e.target.value === NAO_CADASTRADO)
-                        setForm((f) => ({ ...f, bairro: "" }));
-                    }}
+                    onFocus={(e) => { if (e.target.value === NAO_CADASTRADO) setForm((f) => ({ ...f, bairro: "" })); }}
                     className="h-9 bg-input border-border text-sm"
                   />
                 </div>
@@ -407,26 +350,19 @@ export default function ConfiguracoesEstabelecimento() {
                     placeholder="Auto-preenchido"
                     value={form.cidade}
                     onChange={(e) => setForm((f) => ({ ...f, cidade: e.target.value }))}
-                    onFocus={(e) => {
-                      if (e.target.value === NAO_CADASTRADO)
-                        setForm((f) => ({ ...f, cidade: "" }));
-                    }}
+                    onFocus={(e) => { if (e.target.value === NAO_CADASTRADO) setForm((f) => ({ ...f, cidade: "" })); }}
                     className="h-9 bg-input border-border text-sm"
                   />
                 </div>
               </div>
 
-              {/* Estado */}
               <div className="space-y-1">
                 <Label className="text-xs text-muted-foreground">Estado (UF)</Label>
                 <Input
                   placeholder="Auto-preenchido"
                   value={form.estado}
                   onChange={(e) => setForm((f) => ({ ...f, estado: e.target.value }))}
-                  onFocus={(e) => {
-                    if (e.target.value === NAO_CADASTRADO)
-                      setForm((f) => ({ ...f, estado: "" }));
-                  }}
+                  onFocus={(e) => { if (e.target.value === NAO_CADASTRADO) setForm((f) => ({ ...f, estado: "" })); }}
                   className="h-9 bg-input border-border text-sm"
                 />
               </div>
@@ -437,11 +373,7 @@ export default function ConfiguracoesEstabelecimento() {
               onClick={handleSalvarBarbearia}
               disabled={savingBarbearia}
             >
-              {savingBarbearia ? (
-                <Loader2 className="w-4 h-4 animate-spin mr-2" />
-              ) : (
-                <Save className="w-4 h-4 mr-2" />
-              )}
+              {savingBarbearia ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
               Salvar Informações
             </Button>
           </div>
@@ -450,26 +382,9 @@ export default function ConfiguracoesEstabelecimento() {
 
       {/* ── Seção: Horário de Funcionamento ── */}
       <section className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4 text-primary" />
-            <h2 className="font-semibold text-sm">Horário de Funcionamento</h2>
-          </div>
-          {!loadingHorario && dias.length > 0 && (
-            <Button
-              size="sm"
-              className="gold-gradient text-background font-semibold"
-              onClick={handleSalvarTodos}
-              disabled={savingAll}
-            >
-              {savingAll ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Save className="w-4 h-4" />
-              )}
-              <span className="ml-1.5">Salvar Tudo</span>
-            </Button>
-          )}
+        <div className="flex items-center gap-2">
+          <Clock className="w-4 h-4 text-primary" />
+          <h2 className="font-semibold text-sm">Horário de Funcionamento</h2>
         </div>
 
         {loadingHorario ? (
@@ -477,116 +392,127 @@ export default function ConfiguracoesEstabelecimento() {
             <Loader2 className="w-5 h-5 animate-spin text-primary" />
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="bg-card border border-border rounded-lg divide-y divide-border">
             {dias.map((dia) => (
-              <div
+              <button
                 key={dia.diaSemana}
-                className="bg-card border border-border rounded-lg p-4 space-y-4"
+                onClick={() => setDiaEditando({ ...dia })}
+                className="w-full flex items-center justify-between px-4 py-3 hover:bg-accent/50 transition-colors text-left"
               >
-                <div className="flex items-center justify-between">
-                  <span className="font-semibold text-sm">{dia.nomeDia}</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground">
-                      {dia.aberto ? "Aberto" : "Fechado"}
-                    </span>
-                    <Switch
-                      checked={dia.aberto}
-                      onCheckedChange={(checked) =>
-                        updateDia(dia.diaSemana, { aberto: checked })
-                      }
-                    />
+                <div className="flex items-center gap-3">
+                  {dia.aberto ? (
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                  ) : (
+                    <XCircle className="w-4 h-4 text-muted-foreground/50 shrink-0" />
+                  )}
+                  <div>
+                    <p className="text-sm font-medium">{dia.nomeDia}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {dia.aberto
+                        ? `${formatTime(dia.horaInicio)} – ${formatTime(dia.horaFim)}`
+                        : "Fechado"}
+                    </p>
                   </div>
                 </div>
-
-                {dia.aberto && (
-                  <div className="space-y-3">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <Label className="text-xs text-muted-foreground">Abertura</Label>
-                        <Input
-                          type="time"
-                          value={dia.horaInicio?.substring(0, 5) ?? ""}
-                          onChange={(e) =>
-                            updateDia(dia.diaSemana, { horaInicio: e.target.value })
-                          }
-                          className="h-9 bg-input border-border text-sm"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-xs text-muted-foreground">Fechamento</Label>
-                        <Input
-                          type="time"
-                          value={dia.horaFim?.substring(0, 5) ?? ""}
-                          onChange={(e) =>
-                            updateDia(dia.diaSemana, { horaFim: e.target.value })
-                          }
-                          className="h-9 bg-input border-border text-sm"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <Label className="text-xs text-muted-foreground">Início do almoço</Label>
-                        <Input
-                          type="time"
-                          value={dia.almocoInicio?.substring(0, 5) ?? ""}
-                          onChange={(e) =>
-                            updateDia(dia.diaSemana, { almocoInicio: e.target.value })
-                          }
-                          className="h-9 bg-input border-border text-sm"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-xs text-muted-foreground">Fim do almoço</Label>
-                        <Input
-                          type="time"
-                          value={dia.almocoFim?.substring(0, 5) ?? ""}
-                          onChange={(e) =>
-                            updateDia(dia.diaSemana, { almocoFim: e.target.value })
-                          }
-                          className="h-9 bg-input border-border text-sm"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">
-                        Intervalo entre agendamentos (min)
-                      </Label>
-                      <Input
-                        type="number"
-                        min={5}
-                        step={5}
-                        value={dia.intervaloMinutos}
-                        onChange={(e) =>
-                          updateDia(dia.diaSemana, { intervaloMinutos: Number(e.target.value) })
-                        }
-                        className="h-9 bg-input border-border text-sm"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="w-full border-primary/30 text-primary hover:bg-primary/10 text-xs"
-                  onClick={() => handleSalvarDia(dia)}
-                  disabled={dia.saving}
-                >
-                  {dia.saving ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
-                  ) : (
-                    <Save className="w-3.5 h-3.5 mr-1.5" />
-                  )}
-                  Salvar {dia.nomeDia}
-                </Button>
-              </div>
+                <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
+              </button>
             ))}
           </div>
         )}
       </section>
+
+      {/* ── Modal de edição de dia ── */}
+      <Dialog open={!!diaEditando} onOpenChange={(open) => { if (!open) setDiaEditando(null); }}>
+        <DialogContent className="bg-card border-border max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="font-display text-base">
+              {diaEditando?.nomeDia}
+            </DialogTitle>
+          </DialogHeader>
+
+          {diaEditando && (
+            <div className="space-y-4 mt-1">
+              {/* Toggle aberto/fechado */}
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">
+                  {diaEditando.aberto ? "Aberto" : "Fechado"}
+                </span>
+                <Switch
+                  checked={diaEditando.aberto}
+                  onCheckedChange={(checked) => updateEditando({ aberto: checked })}
+                />
+              </div>
+
+              {diaEditando.aberto && (
+                <>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Abertura</Label>
+                      <Input
+                        type="time"
+                        value={diaEditando.horaInicio?.substring(0, 5) ?? ""}
+                        onChange={(e) => updateEditando({ horaInicio: e.target.value })}
+                        className="h-9 bg-input border-border text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Fechamento</Label>
+                      <Input
+                        type="time"
+                        value={diaEditando.horaFim?.substring(0, 5) ?? ""}
+                        onChange={(e) => updateEditando({ horaFim: e.target.value })}
+                        className="h-9 bg-input border-border text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Início almoço</Label>
+                      <Input
+                        type="time"
+                        value={diaEditando.almocoInicio?.substring(0, 5) ?? ""}
+                        onChange={(e) => updateEditando({ almocoInicio: e.target.value })}
+                        className="h-9 bg-input border-border text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Fim almoço</Label>
+                      <Input
+                        type="time"
+                        value={diaEditando.almocoFim?.substring(0, 5) ?? ""}
+                        onChange={(e) => updateEditando({ almocoFim: e.target.value })}
+                        className="h-9 bg-input border-border text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Intervalo entre agendamentos (min)</Label>
+                    <Input
+                      type="number"
+                      min={5}
+                      step={5}
+                      value={diaEditando.intervaloMinutos}
+                      onChange={(e) => updateEditando({ intervaloMinutos: Number(e.target.value) })}
+                      className="h-9 bg-input border-border text-sm"
+                    />
+                  </div>
+                </>
+              )}
+
+              <Button
+                className="w-full gold-gradient text-background font-semibold"
+                onClick={handleSalvarDia}
+                disabled={savingDia}
+              >
+                {savingDia ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                Salvar {diaEditando.nomeDia}
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
