@@ -3,7 +3,7 @@
  * Hero com imagem da barbearia, CTA de agendamento, lista de serviços
  */
 import { Link, useLocation } from "wouter";
-import { Calendar, Scissors, Clock, Star } from "lucide-react";
+import { Calendar, Scissors, Clock, Star, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
@@ -26,9 +26,10 @@ export default function Home() {
   const [, setLocation] = useLocation();
   const [servicos, setServicos] = useState<ServicoDetalhesResponse[]>([]);
   const [barbeiros, setBarbeiros] = useState<BarbeirosDetalhesResponse[]>([]);
+  const [loadingServicos, setLoadingServicos] = useState(true);
 
   useEffect(() => {
-    servicoApi.listar(1, 6).then((r) => setServicos(r.data.items || [])).catch(() => {});
+    servicoApi.listar(1, 6).then((r) => setServicos(r.data.items || [])).catch(() => {}).finally(() => setLoadingServicos(false));
     usuarioApi.listarBarbeiros().then((r) => {
       const data = r.data;
       setBarbeiros(Array.isArray(data) ? data : []);
@@ -100,7 +101,11 @@ export default function Home() {
           <h2 className="font-display text-2xl font-bold">Nossos Serviços</h2>
         </div>
 
-        {servicos.length > 0 ? (
+        {loadingServicos ? (
+          <div className="flex justify-center py-8">
+            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+          </div>
+        ) : servicos.length > 0 ? (
           <div className="grid gap-3">
             {servicos.map((servico, i) => (
               <motion.div
@@ -133,7 +138,7 @@ export default function Home() {
           </div>
         ) : (
           <div className="text-center py-8 text-muted-foreground text-sm">
-            <p>Configure a URL da API nas configurações para ver os serviços disponíveis.</p>
+            <p>Nenhum serviço disponível.</p>
           </div>
         )}
       </section>
