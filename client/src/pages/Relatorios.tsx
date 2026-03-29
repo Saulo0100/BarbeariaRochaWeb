@@ -77,7 +77,7 @@ export default function Relatorios() {
   const [relatorioBarbeiros, setRelatorioBarbeiros] = useState<RelatorioBarbeiroResponse[]>([]);
 
   const isAdmin = isPerfil("administrador") || isPerfil("barbeiroadministrador");
-  const isBarbeiroAdmin = isPerfil("barbeiroadministrador");
+  const isBarbeiroAdmin = isPerfil("barbeiroadministrador") || isPerfil("administrador");
   const isBarbeiro = isPerfil("barbeiro") || isPerfil("barbeiroadministrador");
 
   useEffect(() => {

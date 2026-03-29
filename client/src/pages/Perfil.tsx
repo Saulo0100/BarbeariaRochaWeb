@@ -131,13 +131,13 @@ export default function Perfil() {
                     reader.readAsDataURL(fotoFile);
                   });
                   await usuarioApi.editar(user.id, { id: user.id, foto: base64 });
-                  await refreshUser();
                   setFotoFile(null);
                   setFotoPreview(null);
+                  setSavingFoto(false);
                   toast.success("Foto atualizada!");
+                  refreshUser().catch(() => {});
                 } catch (err: any) {
                   toast.error(err.response?.data || "Erro ao atualizar foto");
-                } finally {
                   setSavingFoto(false);
                 }
               }}
