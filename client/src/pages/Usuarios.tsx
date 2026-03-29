@@ -187,14 +187,14 @@ export default function Usuarios() {
               <div className="space-y-1">
                 <Label className="text-xs">Telefone</Label>
                 <Input
+                  type="tel"
                   value={formatNumero(form.numero)}
                   onChange={(e) => {
                     const digits = e.target.value.replace(/\D/g, "").slice(0, 11);
-                    setForm({ ...form, numero: digits });
+                    setForm((prev) => ({ ...prev, numero: digits }));
                   }}
                   className="h-10 bg-input border-border text-sm"
                   placeholder="(11) 99999-9999"
-                  maxLength={15}
                 />
               </div>
               <div className="space-y-1">
