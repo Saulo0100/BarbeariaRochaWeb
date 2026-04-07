@@ -1,0 +1,550 @@
+# BarbeariaRochaWeb — Contexto Completo do Projeto
+
+## Visao Geral
+
+Sistema web **mobile-first** para gerenciamento de barbearias. Permite agendamento online publico (sem login), painel administrativo completo, controle de mensalistas, relatorios BI e suporte a multiplos clientes/barbearias via configuracao.
+
+- **Tipo:** SPA (Single Page Application) fullstack
+- **Frontend:** React 19 + TypeScript + Vite
+- **Backend de producao:** Express.js servindo arquivos estaticos + SPA fallback
+- **Backend de negocio (API):** Externo, .NET (nao esta neste repositorio). URL configuravel via env var
+- **Deploy:** Render (referenciado em comentarios de api.ts)
+
+---
+
+## Stack Tecnologica
+
+### Frontend (`/client/`)
+
+| Tecnologia | Versao | Uso |
+|---|---|---|
+| React | 19.2.1 | Framework UI |
+| TypeScript | 5.6.3 | Tipagem estatica |
+| Vite | 7.1.7 | Build tool e dev server |
+| Tailwind CSS | 4.1.14 | Estilizacao utilitaria (oklch color space) |
+| shadcn/ui | latest | 53 componentes baseados em Radix UI |
+| Wouter | 3.3.5 | Roteamento (alternativa leve ao React Router) |
+| Axios | 1.12.0 | HTTP client com interceptors JWT |
+| Framer Motion | 12.23.22 | Animacoes (menu dropdown, tab ativa) |
+| React Hook Form | 7.64.0 | Gerenciamento de formularios |
+| Zod | 4.1.12 | Validacao de schemas |
+| Recharts | 2.15.2 | Graficos BI (Line, Bar, Pie) |
+| Sonner | 2.0.7 | Toast notifications |
+| Lucide React | latest | Icones |
+
+### Backend de Producao (`/server/`)
+
+| Tecnologia | Uso |
+|---|---|
+| Express.js | Serve `dist/public/` como estatico; SPA fallback (`*` -> `index.html`) |
+| esbuild | Bundler do server em producao |
+
+### Dev Tools
+
+| Ferramenta | Uso |
+|---|---|
+| pnpm 10.15.1 | Package manager |
+| Prettier | Formatacao: `semi: true`, `singleQuote: false`, `trailingComma: "es5"`, `arrowParens: "avoid"` |
+
+---
+
+## Estrutura de Pastas
+
+```
+BarbeariaRochaWeb/
+├── .context                    # Este arquivo
+├── CLAUDE.md                   # Diretrizes para IA editar codigo
+├── agents.md                   # Documentacao: regras de negocio e arquitetura
+├── ideas.md                    # Brainstorm de design (Vintage Barbershop, etc.)
+├── components.json             # Config shadcn/ui (estilo new-york)
+├── tsconfig.json               # TypeScript (path alias: @/* -> client/src/*)
+├── .prettierrc                 # Formatacao (semi:true, aspas duplas, trailing comma es5)
+├── .env / .env.development / .env.production
+│
+├── patches/
+│   └── wouter@3.7.1.patch     # Patch: coleta rotas em window.__WOUTER_ROUTES__ (introspeccao)
+│
+├── shared/
+│   └── const.ts               # COOKIE_NAME (nao usado), ONE_YEAR_MS
+│
+├── server/
+│   └── index.ts               # Express: serve dist/public em prod, SPA fallback, porta via PORT env
+│
+├── .manus-logs/                # Logs do Manus runtime (~2MB) — deveria estar no .gitignore
+│
+└── client/
+    ├── vite.config.ts          # Vite + React + Tailwind; alias @/ -> ./src
+    ├── package.json            # Scripts e dependencias
+    ├── .env                    # Variaveis de ambiente do client
+    ├── public/
+    │   └── clientes/           # Assets por cliente (logos, imagens)
+    │       ├── barbearia-rocha/
+    │       └── barbearia-pedro/
+    └── src/
+        ├── main.tsx            # Entry point
+        ├── App.tsx             # Root: ErrorBoundary > ThemeProvider > AuthProvider > TooltipProvider > Router
+        ├── index.css           # Tailwind v4 + tema vintage + CSS vars dinamicas
+        ├── const.ts            # Re-exporta shared/const + getLoginUrl() para OAuth
+        │
+        ├── config/
+        │   ├── types.ts        # AppConfig { nome, logo, tema: { primaryColor, secondaryColor } }
+        │   ├── index.ts        # Seleciona config via VITE_CLIENT; throw se invalido
+        │   ├── barbearia-rocha.ts
+        │   ├── barbearia-pedro.ts
+        │   └── cliente-b.ts
+        │
+        ├── contexts/
+        │   ├── AuthContext.tsx  # Auth JWT completo (ver secao dedicada abaixo)
+        │   └── ThemeContext.tsx # Tema dark/light via localStorage
+        │
+        ├── hooks/
+        │   ├── useComposition.ts  # Hook de composicao
+        │   ├── useMobile.tsx      # Detecta viewport mobile via media query
+        │   └── usePersistFn.ts    # Alternativa a useCallback — mesma ref sem deps
+        │
+        ├── lib/
+        │   ├── api.ts          # Axios instance + todos os endpoints (ver secao dedicada)
+        │   ├── types.ts        # Enums + interfaces de request/response (494 linhas)
+        │   └── utils.ts        # cn() — merge de classes Tailwind via clsx + twMerge
+        │
+        ├── components/
+        │   ├── Layout.tsx      # Header + bottom nav dinamica por perfil + menu dropdown
+        │   ├── Footer.tsx      # Busca dados de 2 endpoints; so renderiza na home publica
+        │   ├── ErrorBoundary.tsx
+        │   ├── Map.tsx         # Google Maps via Forge proxy bridge
+        │   ├── ManusDialog.tsx # Dialog OAuth Manus (pode estar descontinuado)
+        │   └── ui/             # 53 componentes shadcn/ui
+        │
+        └── pages/              # 27 paginas (ver secao Rotas)
+```
+
+---
+
+## Sistema de Autenticacao (`AuthContext.tsx`)
+
+### Contexto exposto via `useAuth()`
+
+```typescript
+interface AuthContextType {
+  user: UsuarioDetalhesResponse | null;  // Dados do usuario logado
+  token: string | null;                  // JWT armazenado em localStorage
+  isLoading: boolean;                    // true enquanto valida token no startup
+  isAuthenticated: boolean;              // true quando tem token E user carregado
+  login: (data: LoginRequest) => Promise<void>;   // Login e fetch automatico do user
+  logout: () => void;                    // Limpa localStorage e state
+  refreshUser: () => Promise<void>;      // Re-busca dados do user via /api/Usuario/me
+  isPerfil: (perfil: string) => boolean; // Comparacao case-insensitive de perfil
+}
+```
+
+### Fluxo de inicializacao
+1. `useState(() => localStorage.getItem("token"))` — le token salvo
+2. `useEffect` -> `fetchUser()` — busca `/api/Usuario/me` com o token
+3. Se token invalido: remove de localStorage, seta user/token como null
+4. `isLoading = false` quando fetch completa (sucesso ou erro)
+
+### Fluxo de login
+1. `authApi.login(data)` retorna JWT como string pura
+2. Salva em `localStorage.setItem("token", jwt)`
+3. Faz `usuarioApi.me()` para obter dados do user
+4. Se falha: remove token e lanca erro
+
+### Perfis (enum)
+| Perfil | Valor | String retornada pela API |
+|---|---|---|
+| Cliente | 1 | "Cliente" |
+| Barbeiro | 2 | "Barbeiro" |
+| BarbeiroAdministrador | 3 | "BarbeiroAdministrador" |
+| Administrador | 4 | "Administrador" |
+
+`isPerfil()` compara via `.toLowerCase()` — pode passar "administrador" ou "Administrador".
+
+### Sistema OAuth (secundario)
+
+Arquivo `client/src/const.ts` expoe `getLoginUrl()` que monta URL para portal OAuth externo:
+```
+{VITE_OAUTH_PORTAL_URL}/app-auth?appId={VITE_APP_ID}&redirectUri={origin}/api/oauth/callback&state={base64}&type=signIn
+```
+O componente `ManusDialog.tsx` e o plugin `vite-plugin-manus-runtime` estao relacionados mas podem estar descontinuados — nao encontrado em uso ativo.
+
+---
+
+## API Client (`/client/src/lib/api.ts`)
+
+### Configuracao
+
+```typescript
+const API_BASE_URL =
+  localStorage.getItem("apiBaseUrl") ||    // 1. Override via pagina Configuracoes
+  import.meta.env.VITE_API_BASE_URL ||     // 2. Env var (configurada no Render)
+  "https://localhost:44396";               // 3. Fallback dev
+```
+
+- `setApiBaseUrl(url)` — muda URL em runtime sem rebuild (salva em localStorage)
+- `getApiBaseUrl()` — retorna URL atual
+
+### Interceptor Request
+Adiciona `Authorization: Bearer <token>` se existir token em localStorage.
+
+### Interceptor Response — Tratamento de Erros
+
+```typescript
+// 401: So redireciona se usuario TINHA token (sessao expirada)
+// NAO redireciona visitantes publicos navegando sem login
+if (error.response?.status === 401) {
+  const hadToken = localStorage.getItem("token");
+  if (hadToken) {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    window.location.href = "/login";
+  }
+}
+
+// ExceptionMiddleware pattern: API retorna { status, message }
+// Interceptor extrai apenas a message para simplificar tratamento
+if (error.response?.data?.message) {
+  error.response.data = error.response.data.message;
+}
+```
+
+### Padrao de paginacao
+
+Endpoints paginados usam:
+```typescript
+api.get<PaginacaoResultado<T>>("/api/endpoint", {
+  params: { pagina: 1, itensPorPagina: 10, ...filtros }
+});
+```
+
+### Modulos da API
+
+| Modulo | Endpoints |
+|---|---|
+| `authApi` | login, esqueceuSenha, novaSenha, redefinirSenha |
+| `tokenApi` | gerarToken (codigo 4 digitos via WhatsApp) |
+| `usuarioApi` | criar, criarComoAdmin, editar, excluir, editarPorcentagem, obterPorId, listar (paginado), me, confirmarEmail, listarBarbeiros |
+| `agendamentoApi` | horariosOcupados, criar, criarParaCliente, obterPorId, obterAtual, editarECompletar, completar, cancelar, marcarClienteFaltou, gerarTokenCancelamento, pendentesPorNumero, cancelarPorNumero, cancelarComoCliente, meusAgendamentos, adicionaisDisponiveis, proximoAgendamentoPorNumero, listar (paginado) |
+| `servicoApi` | listar (paginado), criar, deletar |
+| `excecaoApi` | criar, deletar, obterPorId, listar (paginado), obterPorBarbeiro |
+| `mensalistaApi` | cadastrar, cancelar, listar, registrarCorte, listarCortes, deletarCorte, gerarAgendamentos |
+| `relatorioApi` | geral, servicosMaisPedidos, clientesFrequentes, faturamentoDiario, faturamentoPorMetodo, porBarbeiro |
+| `adicionalApi` | listar, criar, deletar |
+| `horarioApi` | disponiveis, disponiveisPorServico, disponiveisEtapa2, todos, horariosMensalista |
+| `configuracaoBarbeariaApi` | obter, criar, atualizar, deletar |
+| `configuracaoHorarioApi` | listar, obterPorDia, salvar, salvarTodos |
+
+---
+
+## Rotas (`/client/src/App.tsx`)
+
+### Publicas (sem autenticacao)
+
+| Rota | Componente | Descricao |
+|---|---|---|
+| `/` | Home | Landing page |
+| `/login` | Login | Autenticacao por numero + senha |
+| `/cadastro` | Cadastro | Registro de novo usuario |
+| `/confirmar-email` | ConfirmarEmail | Confirmacao via token no email |
+| `/redefinir-senha` | RedefinirSenha | Recuperacao de senha |
+| `/agendar` | Agendar | Fluxo de agendamento (5 etapas, sem login) |
+| `/cancelar-agendamento` | CancelarAgendamento | Cancelar via link recebido |
+| `/proximo-agendamento` | VerProximoAgendamento | Ver proximo horario por telefone |
+| `/servicos` | Servicos | Lista de servicos e precos |
+
+### Autenticadas (por perfil)
+
+| Rota | Componente | Perfil Minimo |
+|---|---|---|
+| `/meus-cortes` | MeusCortes | Cliente |
+| `/perfil` | Perfil | Cliente |
+| `/corte-atual` | CorteAtual | Barbeiro |
+| `/agendamentos` | Agendamentos | Barbeiro |
+| `/agendar-cliente` | AgendarParaCliente | Barbeiro |
+| `/excecoes` | Excecoes | Barbeiro |
+| `/relatorios` | Relatorios | Barbeiro |
+| `/horario-funcionamento` | ConfiguracaoHorario | BarbeiroAdmin |
+| `/configuracoes-estabelecimento` | ConfiguracoesEstabelecimento | BarbeiroAdmin |
+| `/dashboard` | Dashboard | Administrador |
+| `/usuarios` | Usuarios | Administrador |
+| `/servicos-admin` | ServicosAdmin | Administrador |
+| `/mensalistas` | Mensalistas | Administrador |
+| `/adicionais-admin` | AdicionaisAdmin | Administrador |
+
+**Nota:** A protecao de rotas e feita pela bottom nav (nao mostra links inacessiveis), mas nao ha guard no frontend — a seguranca esta no backend.
+
+---
+
+## Layout e Navegacao (`Layout.tsx`)
+
+### Estrutura
+```
+┌──────────────────────────────┐
+│ Header (sticky)              │
+│ [Logo] [Nome]     [Menu ☰]  │  <- Menu hamburger so para autenticados
+├──────────────────────────────┤
+│                              │
+│ Main Content (flex-1, pb-20) │
+│                              │
+│ [Footer] (so home publica)   │
+├──────────────────────────────┤
+│ Bottom Nav (fixed)           │
+│ [Icon] [Icon] [Icon] [Icon]  │  <- Muda por perfil
+└──────────────────────────────┘
+```
+
+### Bottom Navigation por Perfil
+
+| Perfil | Abas |
+|---|---|
+| Visitante | Inicio, Agendar, Meus agendamentos, Entrar |
+| Cliente | Inicio, Agendar, Cortes, Perfil |
+| Barbeiro | Atual, Agenda, Agendar, Relatorios, Perfil |
+| BarbeiroAdmin | Atual, Agenda, Agendar, Relatorios, Perfil |
+| Administrador | Painel, Agenda, Agendar, Relatorios, Perfil |
+
+### Menu Dropdown (hamburger)
+Visivel apenas para autenticados. Animado com Framer Motion (opacity + height).
+
+- **Admin / BarbeiroAdmin:** Agendar para Cliente, Gerenciar Servicos, Excecoes, Mensalistas, Usuarios
+- **Barbeiro:** Agendar para Cliente, Minhas Excecoes
+- **Todos autenticados:** Botao "Sair" (logout)
+
+### Tab ativa
+Indicador visual: barra dourada no topo (`gold-gradient`, animada com `layoutId="activeTab"` do Framer Motion).
+
+---
+
+## Componentes Customizados Importantes
+
+### Footer.tsx (206 linhas)
+- **Renderizado apenas:** `!isAuthenticated && location === "/"` (home publica)
+- **Busca dados de 2 endpoints no mount:**
+  - `configuracaoHorarioApi.listar()` -> horarios de funcionamento
+  - `configuracaoBarbeariaApi.obter()` -> dados da barbearia (telefone, endereco)
+- **Agrupa horarios dinamicamente:** Seg-Sex (se iguais) em um grupo, Sab em outro, Dom fechado
+- **Gera links clicaveis:**
+  - WhatsApp: `https://wa.me/55{numero}` com mascara `(XX) XXXXX-XXXX`
+  - Google Maps: concatena rua + bairro + cidade + estado + cep
+- **Falhas silenciosas:** `.catch(() => {})` — nao mostra erro se API falha
+
+### Map.tsx (156 linhas)
+- Integracao Google Maps via **Forge proxy bridge**
+- Carrega script: `{VITE_FRONTEND_FORGE_API_URL}/v1/maps/proxy/maps/api/js?key={VITE_FRONTEND_FORGE_API_KEY}`
+- Libraries: marker, places, geocoding, geometry
+- Props: `initialCenter`, `initialZoom`, `onMapReady(map, google)`
+- Usa `usePersistFn` para callback estavel
+
+### ManusDialog.tsx (86 linhas)
+- Dialog OAuth para Manus (portal externo)
+- **Possivelmente descontinuado** — importado mas sem uso ativo encontrado
+- Props: title, logo, open, onLogin, onOpenChange, onClose
+
+---
+
+## Tipos e Enums (`/client/src/lib/types.ts`)
+
+### Enums
+
+```typescript
+enum Perfil { Cliente=1, Barbeiro=2, BarbeiroAdministrador=3, Administrador=4 }
+
+enum AgendamentoStatus {
+  Concluido=1, Pendente=2, LembreteEnviado=3, CanceladoPeloCliente=4,
+  CanceladoPeloBarbeiro=5, Confirmado=6, VouAtrasar=7, SlotReservado=8, ClienteFaltou=9
+}
+
+enum CategoriaServico { Cabelo=1, Barba=2, Sobrancelha=3 }
+enum MetodoPagamento { Dinheiro=1, Credito=2, Debito=3, Pix=4 }
+enum TipoAgenda { Diaria=1, Semanal=2, Quinzenal=3, Mensal=4, Fechada=5 }
+enum MensalistaStatus { Ativo=1, Inativo=2 }
+enum MensalistaTipo { Mensal=1, Quinzenal=2 }
+enum PeriodoTrabalho { DiaTodo=1, Manha=2, Tarde=3 }
+```
+
+### Interfaces Response Principais
+- `UsuarioDetalhesResponse` — id, nome, numero, email, perfil, foto, descricao, agenda, servicos[]
+- `BarbeirosDetalhesResponse` — id, nome, descricao, agenda, foto
+- `AgendamentoDetalheResponse` — dados completos do agendamento
+- `ServicoDetalhesResponse` — id, nome, preco, duracao, categoria
+- `MensalistaResponse` / `MensalistaCorteResponse`
+- `RelatorioGeralResponse` — metricas de BI
+- `ConfiguracaoBarbeariaResponse` — nome, telefone, endereco completo
+- `ConfiguracaoHorarioResponse` — diaSemana, nomeDia, aberto, horaInicio, horaFim
+- `HorariosDisponiveisResponse` / `HorariosDisponiveisServicoResponse`
+- `PaginacaoResultado<T>` — wrapper generico de paginacao
+
+---
+
+## Regras de Negocio
+
+### Agendamento (fluxo publico — 5 etapas)
+1. Seleciona barbeiro (lista de `usuarioApi.listarBarbeiros()`)
+2. Escolhe servico (afeta duracao do slot)
+3. Seleciona data/hora disponivel (backend gerencia via `horarioApi.disponiveis()`)
+4. Insere nome e numero de telefone
+5. Recebe codigo de 4 digitos via WhatsApp (`tokenApi.gerarToken()`), confirma
+- Domingos sao bloqueados no calendario (barbearia fechada)
+- Frontend **NAO gera slots localmente** — sempre consulta backend
+
+### Horarios de Funcionamento (padrao)
+| Dia | Horario | Intervalo |
+|---|---|---|
+| Segunda a Sexta | 09:00 as 20:00 | 12:20-13:20 |
+| Sabado | 10:00 as 20:00 | 12:00-13:00 |
+| Domingo | Fechado | — |
+
+### Mensalistas
+- Clientes com plano recorrente (Mensal ou Quinzenal)
+- Agendamentos gerados automaticamente via `mensalistaApi.gerarAgendamentos()` — chamado no startup do App
+- Status: Ativo ou Inativo
+
+### Relatorios BI
+- Cards: cortes hoje/semana/mes, faturamento, ticket medio, taxa de cancelamentos
+- Graficos: faturamento diario (LineChart), servicos mais pedidos (BarChart), metodos de pagamento (PieChart)
+- Filtros: periodo (hoje/7d/30d/todos), barbeiro (apenas para admin)
+
+---
+
+## Design System
+
+### Tema Vintage Barbershop
+- **Fundo:** `oklch(0.08 0.01 60)` — preto muito escuro com tom quente
+- **Texto:** `oklch(0.92 0.02 75)` — creme
+- **Primario:** dinamico via CSS vars `--brand-primary` (injetado do config do cliente)
+- **Destrutivo:** `oklch(0.55 0.22 25)` — vermelho
+- **Borda:** `oklch(0.24 0.02 65)` — cinza escuro quente
+- **Card:** `oklch(0.13 0.01 60)` — levemente mais claro que fundo
+
+### Tipografia
+- **Display (titulos):** Playfair Display (serif)
+- **Body:** Source Sans 3 (sans-serif)
+
+### Classes Utilitarias Customizadas
+- `gold-gradient` — gradiente dourado (titulos especiais, indicador de tab)
+- `gold-text` — texto dourado
+- `barber-stripe` — stripe decorativo no footer
+
+### Layout Mobile-First
+- Largura maxima: `max-w-sm` (centrado) para conteudo, `max-w-lg` para nav
+- Bottom navigation fixa com `backdrop-blur-sm`
+- Header sticky com `backdrop-blur-sm`
+
+---
+
+## Sistema Multicliente (`/client/src/config/`)
+
+### Como funciona
+1. `VITE_CLIENT` env var define o cliente ativo (validacao em build time)
+2. `config/index.ts` mapeia string -> config; **throw se invalido**
+3. Cada config retorna `AppConfig`:
+   ```typescript
+   interface AppConfig {
+     nome: string;          // Ex: "Barbearia Rocha"
+     logo: string;          // Ex: "/clientes/barbearia-rocha/logo.png"
+     tema: {
+       primaryColor: string;    // oklch(...) — usado em CSS var --brand-primary
+       secondaryColor: string;  // oklch(...) — usado em CSS var --brand-secondary
+     };
+   }
+   ```
+4. CSS vars sao injetadas no `index.css` e consumidas por Tailwind
+
+### Clientes configurados
+
+| ID | Nome | Cor Primaria |
+|---|---|---|
+| `barbearia-rocha` | Barbearia Rocha | oklch(0.76 0.14 75) — ouro/ambar |
+| `barbearia-pedro` | Barbearia Pedro | oklch rosa/magenta (~325) |
+| `cliente-b` | Barbearia Exemplo | oklch azul (~220) |
+
+### Para adicionar novo cliente
+1. Criar `client/src/config/novo-cliente.ts` exportando `AppConfig`
+2. Adicionar assets em `client/public/clientes/novo-cliente/`
+3. Registrar em `config/index.ts` no mapa `configs`
+4. Setar `VITE_CLIENT=novo-cliente` no `.env`
+
+---
+
+## Variaveis de Ambiente
+
+| Variavel | Obrigatoria | Descricao |
+|---|---|---|
+| `VITE_CLIENT` | Sim | ID do cliente (barbearia-rocha, barbearia-pedro, cliente-b) |
+| `VITE_API_BASE_URL` | Sim | URL da API backend .NET (ex: https://api.barbearia.com) |
+| `VITE_OAUTH_PORTAL_URL` | Nao | URL do portal OAuth externo (para fluxo Manus) |
+| `VITE_APP_ID` | Nao | ID da aplicacao no portal OAuth |
+| `VITE_FRONTEND_FORGE_API_URL` | Nao | URL do Forge proxy para Google Maps |
+| `VITE_FRONTEND_FORGE_API_KEY` | Nao | API key do Forge para Google Maps |
+| `PORT` | Nao | Porta do servidor Express em producao (default: 3000) |
+| `NODE_ENV` | Nao | development ou production |
+
+---
+
+## Build e Deploy
+
+### Scripts
+
+```bash
+pnpm dev          # Vite dev server com HMR (--host para rede local)
+pnpm build        # 2 etapas: (1) vite build -> dist/public  (2) esbuild server -> dist/index.js
+pnpm start        # NODE_ENV=production node dist/index.js
+pnpm preview      # Preview do build Vite
+pnpm check        # Type check TypeScript (sem emissao)
+pnpm format       # Prettier em todo o projeto
+```
+
+### Build de Producao (detalhado)
+1. `vite build` — compila React em `dist/public/` (HTML, JS, CSS, assets)
+2. `esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist` — compila server em `dist/index.js`
+3. Resultado: `dist/index.js` serve `dist/public/` e faz SPA fallback
+
+### Servidor de Producao (`server/index.ts`)
+- Serve arquivos estaticos de `dist/public/` (ou `../dist/public` em dev)
+- SPA fallback: `app.get("*")` retorna `index.html`
+- NAO proxeia API — frontend se conecta diretamente ao backend .NET via URL configurada
+
+---
+
+## Patch de Wouter
+
+Arquivo `patches/wouter@3.7.1.patch` adiciona introspeccao de rotas:
+- Dentro do `Switch`, coleta todos os `path` dos filhos `Route`
+- Armazena em `window.__WOUTER_ROUTES__` (array global)
+- **Proposito:** Permite ferramentas externas (Manus, debug) saberem quais rotas existem em runtime
+
+---
+
+## Componentes shadcn/ui Disponiveis (`/client/src/components/ui/`)
+
+53 componentes. Os mais usados:
+- **Layout:** card, separator, scroll-area, sidebar
+- **Formularios:** input, textarea, checkbox, radio-group, select, switch, toggle, button, form
+- **Dialogos:** dialog, alert-dialog, drawer, popover, sheet
+- **Data:** calendar (react-day-picker)
+- **Exibicao:** badge, skeleton, table, tabs, accordion, avatar, progress
+- **Navegacao:** navigation-menu, breadcrumb, pagination, command
+- **Feedback:** sonner (toasts), tooltip, spinner
+- **Graficos:** chart (recharts wrapper)
+
+---
+
+## Housekeeping Pendente
+
+| Item | Status | Acao Sugerida |
+|---|---|---|
+| `.manus-logs/` (~2MB) no git | Deveria ser ignorado | Adicionar ao `.gitignore` |
+| `streamdown@1.4.0` no package.json | Nao importado em nenhum arquivo | Remover dependencia |
+| `vite-plugin-manus-runtime@0.0.57` | No package.json, nao configurado no vite.config | Remover se descontinuado |
+| `COOKIE_NAME` em shared/const.ts | Re-exportado mas nunca consumido | Remover |
+| `ManusDialog.tsx` | Importavel mas sem uso ativo | Verificar se e necessario |
+| `client/src/const.ts` re-exporta shared | `ONE_YEAR_MS` e `COOKIE_NAME` nao usados no frontend | Limpar re-exports |
+
+---
+
+## Documentacao Existente
+
+| Arquivo | Conteudo |
+|---|---|
+| [agents.md](agents.md) | Regras de negocio, arquitetura, rotas, perfis, design |
+| [ideas.md](ideas.md) | Conceitos de design: Vintage Barbershop, Brutalist Barber, Dark Elegance |
+| [CLAUDE.md](CLAUDE.md) | Diretrizes para IA editar codigo neste projeto |
