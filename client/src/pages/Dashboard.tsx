@@ -17,6 +17,7 @@ import {
   AlertTriangle,
   Loader2,
   PackagePlus,
+  Package,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -70,6 +71,7 @@ export default function Dashboard() {
     { href: "/excecoes", icon: AlertTriangle, label: "Exceções", color: "text-red-400" },
     { href: "/mensalistas", icon: Calendar, label: "Mensalistas", color: "text-purple-400" },
     { href: "/adicionais-admin", icon: PackagePlus, label: "Adicionais", color: "text-teal-400" },
+    { href: "/estoque", icon: Package, label: "Estoque", color: "text-green-400" },
   ];
 
   return (
