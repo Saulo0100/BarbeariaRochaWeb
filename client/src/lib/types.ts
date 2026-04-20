@@ -208,12 +208,14 @@ export interface AgendamentoCriarRequest {
 
 export interface AgendamentoCompletarRequest {
   metodoPagamento: MetodoPagamento;
+  produtos?: ProdutoVendaRequest[];
 }
 
 export interface AgendamentoEditarRequest {
   metodoPagamento: MetodoPagamento;
   servicoId: number;
   adicionais?: AdicionalRequest[];
+  produtos?: ProdutoVendaRequest[];
 }
 
 export interface HorarioRequest {
@@ -301,12 +303,23 @@ export interface RelatorioGeralResponse {
   faturamentoHoje: number;
   faturamentoSemana: number;
   faturamentoMes: number;
+  faturamentoProdutosTotal: number;
+  faturamentoProdutosHoje: number;
+  faturamentoProdutosSemana: number;
+  faturamentoProdutosMes: number;
   agendamentosPendentes: number;
   cancelamentosTotal: number;
   clientesFaltaram: number;
   taxaFaltas: number;
   taxaCancelamento: number;
   taxaConclusao: number;
+}
+
+export interface ProdutoMaisVendidoResponse {
+  produtoId: number;
+  nomeProduto: string;
+  quantidadeTotal: number;
+  valorTotal: number;
 }
 
 export interface ServicoMaisPedidoResponse {
@@ -445,6 +458,57 @@ export interface ConfiguracaoHorarioSalvarRequest {
   almocoFim: string;
   horaFim: string;
   intervaloMinutos: number;
+}
+
+// ===== PRODUTO / ESTOQUE =====
+export enum TipoMovimentacao {
+  Entrada = 1,
+  Saida = 2,
+}
+
+export interface ProdutoDetalhesResponse {
+  id: number;
+  nome: string;
+  descricao?: string | null;
+  preco: number;
+  quantidadeEstoque: number;
+  quantidadeMinima: number;
+  estoqueBaixo: boolean;
+}
+
+export interface MovimentacaoEstoqueResponse {
+  id: number;
+  tipo: string;
+  quantidade: number;
+  motivo: string;
+  dataMovimentacao: string;
+  agendamentoId?: number | null;
+}
+
+export interface ProdutoCriarRequest {
+  nome: string;
+  descricao?: string;
+  preco: number;
+  quantidadeInicial: number;
+  quantidadeMinima: number;
+}
+
+export interface ProdutoEditarRequest {
+  nome: string;
+  descricao?: string;
+  preco: number;
+  quantidadeMinima: number;
+}
+
+export interface MovimentacaoCriarRequest {
+  tipo: TipoMovimentacao;
+  quantidade: number;
+  motivo: string;
+}
+
+export interface ProdutoVendaRequest {
+  produtoId: number;
+  quantidade: number;
 }
 
 // ===== HELPER TYPES =====

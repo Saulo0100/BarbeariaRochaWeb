@@ -2,6 +2,11 @@ import axios from "axios";
 import type {
   AdicionalCriarRequest,
   AdicionalDisponivel,
+  MovimentacaoCriarRequest,
+  MovimentacaoEstoqueResponse,
+  ProdutoCriarRequest,
+  ProdutoDetalhesResponse,
+  ProdutoEditarRequest,
   AgendamentoCancelarPorNumeroRequest,
   AgendamentoCriarRequest,
   AgendamentoCriarParaClienteRequest,
@@ -31,6 +36,7 @@ import type {
   MensalistaRegistrarCorteRequest,
   MensalistaResponse,
   PaginacaoResultado,
+  ProdutoMaisVendidoResponse,
   RelatorioBarbeiroResponse,
   RelatorioFiltroRequest,
   RelatorioGeralResponse,
@@ -365,6 +371,16 @@ export const relatorioApi = {
         DataFim: filtro?.dataFim || undefined,
       },
     }),
+
+  produtosMaisVendidos: (filtro?: RelatorioFiltroRequest, top = 10) =>
+    api.get<ProdutoMaisVendidoResponse[]>("/api/relatorio/produtos-mais-vendidos", {
+      params: {
+        BarbeiroId: filtro?.barbeiroId || undefined,
+        DataInicio: filtro?.dataInicio || undefined,
+        DataFim: filtro?.dataFim || undefined,
+        top,
+      },
+    }),
 };
 
 // ===== ADICIONAL =====
@@ -435,6 +451,33 @@ export const configuracaoHorarioApi = {
 
   salvarTodos: (data: ConfiguracaoHorarioSalvarRequest[]) =>
     api.put("/api/configuracao-horario/todos", data),
+};
+
+// ===== PRODUTO / ESTOQUE =====
+export const produtoApi = {
+  listar: () =>
+    api.get<ProdutoDetalhesResponse[]>("/api/Produto"),
+
+  listarPublico: () =>
+    api.get<ProdutoDetalhesResponse[]>("/api/Produto/loja"),
+
+  criar: (data: ProdutoCriarRequest) =>
+    api.post<ProdutoDetalhesResponse>("/api/Produto", data),
+
+  editar: (id: number, data: ProdutoEditarRequest) =>
+    api.put(`/api/Produto/${id}`, data),
+
+  excluir: (id: number) =>
+    api.delete(`/api/Produto/${id}`),
+
+  registrarMovimentacao: (id: number, data: MovimentacaoCriarRequest) =>
+    api.post(`/api/Produto/${id}/movimentacao`, data),
+
+  obterHistorico: (id: number) =>
+    api.get<MovimentacaoEstoqueResponse[]>(`/api/Produto/${id}/historico`),
+
+  contarEstoqueBaixo: () =>
+    api.get<number>("/api/Produto/estoque-baixo/count"),
 };
 
 export default api;

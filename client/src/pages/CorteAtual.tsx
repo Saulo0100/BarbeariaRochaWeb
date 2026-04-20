@@ -4,8 +4,8 @@
  * Pode completar informando método de pagamento ou editar e completar
  */
 import { useEffect, useState, useCallback } from "react";
-import { agendamentoApi } from "@/lib/api";
-import type { AgendamentoDetalheResponse, AdicionalDisponivel, AdicionalRequest } from "@/lib/types";
+import { agendamentoApi, produtoApi } from "@/lib/api";
+import type { AgendamentoDetalheResponse, AdicionalDisponivel, AdicionalRequest, ProdutoDetalhesResponse, ProdutoVendaRequest } from "@/lib/types";
 import { MetodoPagamento } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import {
@@ -34,6 +34,9 @@ import {
   Edit3,
   UserX,
   DollarSign,
+  Package,
+  Plus,
+  Minus,
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
@@ -55,6 +58,8 @@ export default function CorteAtual() {
   const [mode, setMode] = useState<"view" | "complete" | "edit">("view");
   const [markingNoShow, setMarkingNoShow] = useState(false);
   const [noShowDialogOpen, setNoShowDialogOpen] = useState(false);
+  const [produtosDisponiveis, setProdutosDisponiveis] = useState<ProdutoDetalhesResponse[]>([]);
+  const [produtosSelecionados, setProdutosSelecionados] = useState<ProdutoVendaRequest[]>([]);
 
   const fetchCorteAtual = useCallback(() => {
     setLoading(true);
@@ -67,10 +72,13 @@ export default function CorteAtual() {
 
   useEffect(() => {
     fetchCorteAtual();
-    // Auto-refresh every 30 seconds
     const interval = setInterval(fetchCorteAtual, 30000);
     return () => clearInterval(interval);
   }, [fetchCorteAtual]);
+
+  useEffect(() => {
+    produtoApi.listar().then((r) => setProdutosDisponiveis(r.data)).catch(() => {});
+  }, []);
 
   const handleClienteFaltou = async () => {
     if (!corte) return;
@@ -96,16 +104,31 @@ export default function CorteAtual() {
     try {
       await agendamentoApi.completar(corte.id, {
         metodoPagamento: parseInt(metodoPagamento) as MetodoPagamento,
+        produtos: produtosSelecionados.length > 0 ? produtosSelecionados : undefined,
       });
       toast.success("Corte finalizado com sucesso!");
       setMode("view");
       setMetodoPagamento("");
+      setProdutosSelecionados([]);
       fetchCorteAtual();
     } catch (err: any) {
       toast.error(err.response?.data || "Erro ao finalizar corte");
     } finally {
       setCompleting(false);
     }
+  };
+
+  const alterarQuantidadeProduto = (produtoId: number, delta: number, preco: number) => {
+    setProdutosSelecionados((prev) => {
+      const existente = prev.find((p) => p.produtoId === produtoId);
+      if (!existente) {
+        if (delta > 0) return [...prev, { produtoId, quantidade: 1 }];
+        return prev;
+      }
+      const novaQtd = existente.quantidade + delta;
+      if (novaQtd <= 0) return prev.filter((p) => p.produtoId !== produtoId);
+      return prev.map((p) => p.produtoId === produtoId ? { ...p, quantidade: novaQtd } : p);
+    });
   };
 
   const formatDate = (dateStr: string) => {
@@ -283,6 +306,64 @@ export default function CorteAtual() {
 
               {mode === "complete" && (
                 <div className="space-y-3">
+                  {/* Produtos vendidos */}
+                  {produtosDisponiveis.length > 0 && (
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
+                        <Package className="w-3 h-3" />
+                        Produtos vendidos (opcional)
+                      </p>
+                      <div className="space-y-1 max-h-40 overflow-y-auto pr-1">
+                        {produtosDisponiveis.map((p) => {
+                          const sel = produtosSelecionados.find((s) => s.produtoId === p.id);
+                          return (
+                            <div
+                              key={p.id}
+                              className={`flex items-center justify-between p-2 rounded-md border text-xs transition-all ${
+                                sel ? "border-primary/50 bg-primary/5" : "border-border bg-card"
+                              }`}
+                            >
+                              <div>
+                                <span className="font-medium">{p.nome}</span>
+                                <span className="text-primary ml-2">R$ {p.preco.toFixed(2)}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                {sel && (
+                                  <>
+                                    <button
+                                      onClick={() => alterarQuantidadeProduto(p.id, -1, p.preco)}
+                                      className="w-6 h-6 rounded border border-border flex items-center justify-center hover:border-primary/50"
+                                    >
+                                      <Minus className="w-3 h-3" />
+                                    </button>
+                                    <span className="w-5 text-center font-bold text-primary">{sel.quantidade}</span>
+                                  </>
+                                )}
+                                <button
+                                  onClick={() => alterarQuantidadeProduto(p.id, 1, p.preco)}
+                                  className="w-6 h-6 rounded border border-border flex items-center justify-center hover:border-primary/50 text-primary"
+                                >
+                                  <Plus className="w-3 h-3" />
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      {produtosSelecionados.length > 0 && (
+                        <div className="text-right text-xs text-primary font-medium mt-1">
+                          +R$ {produtosDisponiveis
+                            .filter((p) => produtosSelecionados.find((s) => s.produtoId === p.id))
+                            .reduce((acc, p) => {
+                              const s = produtosSelecionados.find((s) => s.produtoId === p.id)!;
+                              return acc + p.preco * s.quantidade;
+                            }, 0)
+                            .toFixed(2)}{" "}
+                          em produtos
+                        </div>
+                      )}
+                    </div>
+                  )}
                   <div>
                     <p className="text-xs text-muted-foreground mb-2">Método de Pagamento</p>
                     <Select value={metodoPagamento} onValueChange={setMetodoPagamento}>
@@ -318,6 +399,7 @@ export default function CorteAtual() {
                       onClick={() => {
                         setMode("view");
                         setMetodoPagamento("");
+                        setProdutosSelecionados([]);
                       }}
                       className="h-11 text-sm border-border"
                     >

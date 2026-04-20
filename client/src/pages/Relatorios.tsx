@@ -14,6 +14,7 @@ import type {
   RelatorioBarbeiroResponse,
   RelatorioFiltroRequest,
   BarbeirosDetalhesResponse,
+  ProdutoMaisVendidoResponse,
 } from "@/lib/types";
 import {
   Scissors,
@@ -29,6 +30,7 @@ import {
   UserX,
   CheckCircle,
   Percent,
+  Package,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import {
@@ -75,6 +77,7 @@ export default function Relatorios() {
   const [faturamentoDiario, setFaturamentoDiario] = useState<FaturamentoPorPeriodoResponse[]>([]);
   const [faturamentoMetodo, setFaturamentoMetodo] = useState<FaturamentoPorMetodoResponse[]>([]);
   const [relatorioBarbeiros, setRelatorioBarbeiros] = useState<RelatorioBarbeiroResponse[]>([]);
+  const [topProdutos, setTopProdutos] = useState<ProdutoMaisVendidoResponse[]>([]);
 
   const isAdmin = isPerfil("administrador") || isPerfil("barbeiroadministrador");
   const isBarbeiroAdmin = isPerfil("barbeiroadministrador") || isPerfil("administrador");
@@ -134,12 +137,13 @@ export default function Relatorios() {
     const filtro = buildFiltro();
 
     try {
-      const [geralRes, servicosRes, clientesRes, diarioRes, metodoRes] = await Promise.allSettled([
+      const [geralRes, servicosRes, clientesRes, diarioRes, metodoRes, produtosRes] = await Promise.allSettled([
         relatorioApi.geral(filtro),
         relatorioApi.servicosMaisPedidos(filtro, 5),
         relatorioApi.clientesFrequentes(filtro, 5),
         relatorioApi.faturamentoDiario(filtro),
         relatorioApi.faturamentoPorMetodo(filtro),
+        relatorioApi.produtosMaisVendidos(filtro, 8),
       ]);
 
       if (geralRes.status === "fulfilled") setGeral(geralRes.value.data);
@@ -147,6 +151,7 @@ export default function Relatorios() {
       if (clientesRes.status === "fulfilled") setTopClientes(clientesRes.value.data);
       if (diarioRes.status === "fulfilled") setFaturamentoDiario(diarioRes.value.data);
       if (metodoRes.status === "fulfilled") setFaturamentoMetodo(metodoRes.value.data);
+      if (produtosRes.status === "fulfilled") setTopProdutos(produtosRes.value.data);
 
       // BarbeiroAdmin also fetches per-barber report with commission data
       if (isBarbeiroAdmin) {
@@ -253,11 +258,29 @@ export default function Relatorios() {
             />
             <StatCard
               icon={DollarSign}
-              label="Faturamento"
+              label="Faturamento Serviços"
               value={formatCurrency(geral.faturamentoTotal)}
               delay={0.05}
             />
           </div>
+
+          {/* Faturamento Produtos (only when there are product sales) */}
+          {(geral.faturamentoProdutosTotal ?? 0) > 0 && (
+            <div className="grid grid-cols-2 gap-3">
+              <StatCard
+                icon={Package}
+                label="Faturamento Produtos"
+                value={formatCurrency(geral.faturamentoProdutosTotal)}
+                delay={0.07}
+              />
+              <StatCard
+                icon={DollarSign}
+                label="Total Geral"
+                value={formatCurrency(geral.faturamentoTotal + geral.faturamentoProdutosTotal)}
+                delay={0.09}
+              />
+            </div>
+          )}
 
           {/* Row 2: Pendentes, Cancelamentos */}
           <div className="grid grid-cols-2 gap-3">
@@ -391,6 +414,63 @@ export default function Relatorios() {
                 <Bar dataKey="quantidade" fill="#D4A855" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Top Products */}
+      {topProdutos.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.45 }}
+          className="bg-card border border-border rounded-lg p-4"
+        >
+          <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+            <Package className="w-4 h-4 text-primary" />
+            Produtos Mais Vendidos
+          </h3>
+          <div className="h-48">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={topProdutos} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.24 0.02 65)" />
+                <XAxis type="number" tick={{ fontSize: 10, fill: "oklch(0.60 0.03 75)" }} />
+                <YAxis
+                  type="category"
+                  dataKey="nomeProduto"
+                  tick={{ fontSize: 10, fill: "oklch(0.60 0.03 75)" }}
+                  width={90}
+                />
+                <Tooltip
+                  contentStyle={{
+                    background: "oklch(0.13 0.01 60)",
+                    border: "1px solid oklch(0.24 0.02 65)",
+                    borderRadius: 8,
+                    fontSize: 12,
+                  }}
+                  formatter={(value: number, name: string) =>
+                    name === "quantidadeTotal"
+                      ? [value, "Unidades"]
+                      : [formatCurrency(value), "Receita"]
+                  }
+                />
+                <Bar dataKey="quantidadeTotal" fill="#D4A855" radius={[0, 4, 4, 0]} name="quantidadeTotal" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="mt-3 space-y-1">
+            {topProdutos.map((p, idx) => (
+              <div key={p.produtoId} className="flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground w-4">{idx + 1}.</span>
+                  <span className="truncate max-w-[140px]">{p.nomeProduto}</span>
+                </div>
+                <div className="flex items-center gap-3 shrink-0">
+                  <span className="text-muted-foreground">{p.quantidadeTotal} un.</span>
+                  <span className="text-primary font-medium">{formatCurrency(p.valorTotal)}</span>
+                </div>
+              </div>
+            ))}
           </div>
         </motion.div>
       )}

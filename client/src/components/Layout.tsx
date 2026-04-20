@@ -22,8 +22,10 @@ import {
   UserPlus,
   Ban,
   Search,
+  Package,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { produtoApi } from "@/lib/api";
 import { motion, AnimatePresence } from "framer-motion";
 import Footer from "./Footer";
 
@@ -31,6 +33,20 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const { user, isAuthenticated, logout, isPerfil } = useAuth();
   const [location] = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [estoqueBaixo, setEstoqueBaixo] = useState(0);
+
+  const isAdminOrBarbeiroAdmin =
+    isAuthenticated &&
+    (isPerfil("administrador") || isPerfil("barbeiroadministrador"));
+
+  useEffect(() => {
+    if (!isAdminOrBarbeiroAdmin) return;
+    produtoApi.contarEstoqueBaixo().then((r) => setEstoqueBaixo(r.data)).catch(() => {});
+    const interval = setInterval(() => {
+      produtoApi.contarEstoqueBaixo().then((r) => setEstoqueBaixo(r.data)).catch(() => {});
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [isAdminOrBarbeiroAdmin]);
 
   const isActive = (path: string) => location === path;
 
@@ -40,7 +56,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       return [
         { path: "/", icon: Home, label: "Início" },
         { path: "/agendar", icon: Calendar, label: "Agendar" },
-        { path: "/proximo-agendamento", icon: Search, label: "Meus agendamentos" },
+        { path: "/loja", icon: Package, label: "Produtos" },
         { path: "/login", icon: User, label: "Entrar" },
       ];
     }
@@ -141,6 +157,19 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     >
                       <ClipboardList className="w-4 h-4" />
                       Gerenciar Serviços
+                    </Link>
+                    <Link
+                      href="/estoque"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
+                    >
+                      <Package className="w-4 h-4" />
+                      Estoque
+                      {estoqueBaixo > 0 && (
+                        <span className="ml-auto flex items-center justify-center w-5 h-5 rounded-full bg-destructive text-[10px] font-bold text-white">
+                          {estoqueBaixo}
+                        </span>
+                      )}
                     </Link>
                     <Link
                       href="/excecoes"

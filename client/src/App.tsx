@@ -33,6 +33,8 @@ import CancelarAgendamento from "./pages/CancelarAgendamento";
 import VerProximoAgendamento from "./pages/VerProximoAgendamento";
 import ConfiguracaoHorario from "./pages/ConfiguracaoHorario";
 import ConfiguracoesEstabelecimento from "./pages/ConfiguracoesEstabelecimento";
+import EstoqueAdmin from "./pages/EstoqueAdmin";
+import Loja from "./pages/Loja";
 
 function Router() {
   return (
@@ -40,6 +42,7 @@ function Router() {
       <Switch>
         {/* Public */}
         <Route path="/" component={Home} />
+        <Route path="/loja" component={Loja} />
         <Route path="/login" component={Login} />
         <Route path="/cadastro" component={Cadastro} />
         <Route path="/confirmar-email" component={ConfirmarEmail} />
@@ -69,6 +72,7 @@ function Router() {
 
         {/* Admin */}
         <Route path="/dashboard" component={Dashboard} />
+        <Route path="/estoque" component={EstoqueAdmin} />
         <Route path="/usuarios" component={Usuarios} />
         <Route path="/servicos-admin" component={ServicosAdmin} />
         <Route path="/mensalistas" component={Mensalistas} />
